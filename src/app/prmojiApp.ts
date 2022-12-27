@@ -1,6 +1,6 @@
 import * as logger from "../utils/logger.ts";
-import GithubEvent from "../utils/types/GithubEvent.ts";
-import SlackMessage from "../utils/types/SlackMessage.ts";
+import GithubEvent from "../types/GithubEvent.ts";
+import SlackMessage from "../types/SlackMessage.ts";
 import { Actions, EmojiMap } from "../utils/const.ts";
 import { SlackClient } from "../slack/client.ts";
 import { PostgresStorage } from "../storage/postgres.ts";

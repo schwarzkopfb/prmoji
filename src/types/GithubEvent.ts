@@ -1,4 +1,4 @@
-import { Actions } from "../const.ts";
+import { Actions } from "../utils/const.ts";
 
 export default interface GithubEvent {
   url?: string;

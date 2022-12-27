@@ -1,20 +1,7 @@
-import { Actions } from "../const.ts";
-
-// action: getPrAction(event),
-// commenter: getPrCommenter(body),
-// comment: getPrCommentBody(body),
-// name: getPrRepoName(body),
-// number: getPrNumber(body),
-// author: getPrAuthor(body),
-// labels: getPrLabels(body),
+import { Actions } from "../utils/const.ts";
 
 export default interface GithubRequestBody {
   action: Actions;
-  name: string;
-  number: number;
-  author: string;
-  commenter: string;
-  labels: string[];
   issue?: {
     number: number;
     title?: string;

@@ -1,6 +1,6 @@
-import GithubEvent from "./types/GithubEvent.ts";
-import GithubRequest from "./types/GithubRequest.ts";
-import GithubRequestBody from "./types/GithubRequestBody.ts";
+import GithubEvent from "../types/GithubEvent.ts";
+import GithubRequest from "../types/GithubRequest.ts";
+import GithubRequestBody from "../types/GithubRequestBody.ts";
 import { Levels, silly as log } from "./logger.ts";
 import {
   Actions,
