@@ -19,7 +19,7 @@ export class PrmojiApp {
   constructor(
     storage: PostgresStorage,
     slackClient: SlackClient,
-    notificationsChannelId: string | null = null
+    notificationsChannelId: string | null = null,
   ) {
     logger.debug("[app] Initializing PrmojiApp instance");
     this.storage = storage;
@@ -30,7 +30,7 @@ export class PrmojiApp {
   async handleMessage(message: SlackMessage) {
     logger.info(
       "[app] Received Slack message",
-      message.text ? message.text.substr(0, 8) : "(no message text)"
+      message.text ? message.text.substr(0, 8) : "(no message text)",
     );
     if (!message.text || !message.channel || !message.timestamp) {
       logger.debug("[app] Missing field(s), discarding message.");
@@ -40,7 +40,7 @@ export class PrmojiApp {
     const prUrlsInMessage = getPrUrlsFromString(message.text);
     logger.debug(
       "[app] PR URLs in message:",
-      prUrlsInMessage.length > 0 ? prUrlsInMessage : "none"
+      prUrlsInMessage.length > 0 ? prUrlsInMessage : "none",
     );
 
     for (const prUrl of prUrlsInMessage) {
@@ -60,11 +60,11 @@ export class PrmojiApp {
       logger.info("[app] Event meets notification criteria, sending message.");
       await this.slackClient.sendMessage(
         getMessage(event),
-        this.notificationsChannelId
+        this.notificationsChannelId,
       );
     } else {
       logger.info(
-        "[app] Event does not meet notification criteria, not sending message"
+        "[app] Event does not meet notification criteria, not sending message",
       );
     }
 
@@ -79,7 +79,7 @@ export class PrmojiApp {
     logger.debug(
       "[app] Got",
       result.length,
-      "matching item" + (result.length === 1 ? "" : "s")
+      "matching item" + (result.length === 1 ? "" : "s"),
     );
 
     if (result.length > 0) {
@@ -99,7 +99,7 @@ export class PrmojiApp {
           await this.slackClient.addEmoji(
             emoji,
             item.message_channel,
-            item.message_timestamp
+            item.message_timestamp,
           );
         }
       } else {

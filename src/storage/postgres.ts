@@ -37,8 +37,11 @@ export class PostgresStorage {
     try {
       await this.waitForConnection();
 
-      const response = await this.client?.queryArray(query);
-      const rows = (response?.rows ?? []) as any as T[];
+      const response = await this.client?.queryObject({
+        camelcase: true,
+        text: query,
+      });
+      const rows = (response?.rows ?? []) as T[];
       const result = JSON.stringify(rows);
 
       logger.debug(
