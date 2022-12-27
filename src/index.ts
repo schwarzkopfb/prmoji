@@ -78,7 +78,12 @@ async function handleGithubEvent({ request, response }: Context) {
   const result = request.body({ type: "json" });
   const body = (await result.value) as GithubRequestBody;
   app.handlePrEvent(
-    parseGithubRequest({ headers: request.headers, body } as GithubRequest),
+    parseGithubRequest({
+      headers: {
+        "x-github-event": request.headers.get("x-github-event"),
+      },
+      body,
+    } as GithubRequest),
   );
 }
 

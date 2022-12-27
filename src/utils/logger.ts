@@ -32,7 +32,8 @@ export function log(level: Levels, ...messageParts: MessagePart[]): void {
 function createLoggerFn(
   level: Levels,
 ): (...messageParts: MessagePart[]) => void {
-  return (...messageParts) => log(level, `(${level})`, ...messageParts);
+  return (...messageParts) =>
+    log(level, `(${level})`, ...(messageParts.map((p) => JSON.stringify(p))));
 }
 
 export const error = createLoggerFn(Levels.ERROR);
