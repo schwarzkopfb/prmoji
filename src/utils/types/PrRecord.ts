@@ -1,4 +1,4 @@
 export default interface PrRecord {
-  message_channel: string;
-  message_timestamp: string;
+  messageChannel: string;
+  messageTimestamp: string;
 }

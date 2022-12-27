@@ -98,8 +98,8 @@ export class PrmojiApp {
           console.log(item);
           await this.slackClient.addEmoji(
             emoji,
-            item.message_channel,
-            item.message_timestamp,
+            item.messageChannel,
+            item.messageTimestamp,
           );
         }
       } else {
