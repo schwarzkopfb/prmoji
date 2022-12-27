@@ -92,10 +92,8 @@ export class PrmojiApp {
       }
 
       if (shouldAddEmoji(event)) {
-        console.log(result);
         for (const item of result) {
           logger.info("[app] Adding emoji", emoji);
-          console.log(item);
           await this.slackClient.addEmoji(
             emoji,
             item.messageChannel,
