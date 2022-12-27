@@ -1,17 +1,23 @@
 import { Actions } from "../const.ts";
 
-export default interface RequestBody {
+// action: getPrAction(event),
+// commenter: getPrCommenter(body),
+// comment: getPrCommentBody(body),
+// name: getPrRepoName(body),
+// number: getPrNumber(body),
+// author: getPrAuthor(body),
+// labels: getPrLabels(body),
+
+export default interface GithubRequestBody {
   action: Actions;
-  fullName: string;
   name: string;
-  url: string;
-  title: string;
   number: number;
   author: string;
+  commenter: string;
   labels: string[];
-  issue: {
+  issue?: {
     number: number;
-    title: string;
+    title?: string;
     pull_request: {
       html_url: string;
     };
@@ -19,10 +25,10 @@ export default interface RequestBody {
       login: string;
     };
   };
-  pull_request: {
+  pull_request?: {
     number: number;
     html_url: string;
-    title: string;
+    title?: string;
     merged: boolean;
     user: {
       login: string;
@@ -37,15 +43,14 @@ export default interface RequestBody {
       login: string;
     };
   };
-  review: {
+  review?: {
     state: string;
   };
-  repository: {
+  repository?: {
     name: string;
     full_name: string;
   };
-  commenter: string;
-  event: {
+  event?: {
     client_msg_id: string;
     text: string;
     channel: string;

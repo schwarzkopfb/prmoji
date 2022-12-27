@@ -1,8 +1,14 @@
-import RequestBody from "./RequestBody.ts";
+import { Actions } from "../const.ts";
 
 export default interface GithubEvent {
-  headers: {
-    "x-github-event": string;
-  };
-  body: RequestBody;
+  url?: string;
+  action?: Actions;
+  commenter: string;
+  comment: string;
+  name?: string;
+  fullName?: string;
+  number?: number;
+  author?: string;
+  labels: string[];
+  title?: string;
 }

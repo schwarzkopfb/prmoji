@@ -1,5 +1,5 @@
 import * as logger from "../utils/logger.ts";
-import RequestBody from "../utils/types/RequestBody.ts";
+import GithubEvent from "../utils/types/GithubEvent.ts";
 import SlackMessage from "../utils/types/SlackMessage.ts";
 import { Actions, EmojiMap } from "../utils/const.ts";
 import { SlackClient } from "../slack/client.ts";
@@ -49,7 +49,7 @@ export class PrmojiApp {
     }
   }
 
-  async handlePrEvent(event: RequestBody) {
+  async handlePrEvent(event: GithubEvent) {
     logger.info("[app] Received PR event:", event.number || "(no PR number)");
     if (!event.url || !event.action) {
       logger.debug("[app] Missing field(s), discarding PR event.");

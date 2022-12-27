@@ -8,7 +8,9 @@ import { PrmojiApp } from "./app/prmojiApp.ts";
 import { PostgresStorage } from "./storage/postgres.ts";
 import { SlackClient } from "./slack/client.ts";
 import * as logger from "./utils/logger.ts";
-import GithubEvent from "./utils/types/GithubEvent.ts";
+import SlackRequest from "./utils/types/SlackRequest.ts";
+import GithubRequest from "./utils/types/GithubRequest.ts";
+import GithubRequestBody from "./utils/types/GithubRequestBody.ts";
 import {
   parseGithubRequest,
   parseSlackRequest,
@@ -18,8 +20,8 @@ import { getLogLevelFromArgs } from "./utils/helpers.ts";
 const PORT = parseInt(Deno.env.get("PORT") || "5000", 10);
 const SLACK_TOKEN = Deno.env.get("SLACK_TOKEN");
 const CONNECTION_STRING = Deno.env.get("DATABASE_URL");
-const AIR_NOTIFICATIONS_CHANNEL_ID = Deno.env.get(
-  "AIR_NOTIFICATIONS_CHANNEL_ID",
+const NOTIFICATIONS_CHANNEL_ID = Deno.env.get(
+  "NOTIFICATIONS_CHANNEL_ID",
 );
 
 if (!SLACK_TOKEN) {
@@ -43,7 +45,7 @@ const storage = new PostgresStorage(CONNECTION_STRING);
 const slackClient = new SlackClient(SLACK_TOKEN);
 const server = new Application();
 const router = new Router();
-const app = new PrmojiApp(storage, slackClient, AIR_NOTIFICATIONS_CHANNEL_ID);
+const app = new PrmojiApp(storage, slackClient, NOTIFICATIONS_CHANNEL_ID);
 
 router
   .get("/", healthcheck)
@@ -74,8 +76,10 @@ async function handleGithubEvent({ request, response }: Context) {
   response.body = "OK";
 
   const result = request.body({ type: "json" });
-  const body = await result.value;
-  app.handlePrEvent(parseGithubRequest(body as GithubEvent));
+  const body = (await result.value) as GithubRequestBody;
+  app.handlePrEvent(
+    parseGithubRequest({ headers: request.headers, body } as GithubRequest),
+  );
 }
 
 async function handleSlackEvent({ request, response }: Context) {
@@ -83,11 +87,12 @@ async function handleSlackEvent({ request, response }: Context) {
   const result = request.body({ type: "json" });
   const body = await result.value;
 
+  // Slack sends a challenge to verify the endpoint on first setup
   if (body.challenge) {
     response.body = body.challenge;
   } else {
     response.body = "OK";
-    app.handleMessage(parseSlackRequest(body as GithubEvent));
+    app.handleMessage(parseSlackRequest({ body } as SlackRequest));
   }
 }
 

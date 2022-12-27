@@ -1,4 +1,7 @@
+import SlackMessage from "./types/SlackMessage.ts";
+import SlackRequest from "./types/SlackRequest.ts";
 import GithubEvent from "./types/GithubEvent.ts";
+import GithubRequest from "./types/GithubRequest.ts";
 import {
   getPrAction,
   getPrAuthor,
@@ -12,7 +15,7 @@ import {
   getPrUrl,
 } from "./helpers.ts";
 
-export function parseGithubRequest(event: GithubEvent) {
+export function parseGithubRequest(event: GithubRequest): GithubEvent {
   const { body } = event;
 
   return {
@@ -29,7 +32,9 @@ export function parseGithubRequest(event: GithubEvent) {
   };
 }
 
-export function parseSlackRequest({ body: { event } }: GithubEvent) {
+export function parseSlackRequest(
+  { body: { event } }: SlackRequest,
+): SlackMessage {
   return {
     id: event.client_msg_id,
     text: event.text,
