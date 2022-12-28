@@ -1,7 +1,7 @@
 import { delay } from "https://deno.land/std@0.170.0/async/delay.ts";
 import { Client } from "https://deno.land/x/postgres@v0.17.0/mod.ts";
 import * as logger from "../utils/logger.ts";
-import PrRecord from "../types/PrRecord.ts";
+import PrRecord from "../models/PrRecord.ts";
 import { getDateStringForDeletion } from "../utils/helpers.ts";
 
 export class PostgresStorage {
