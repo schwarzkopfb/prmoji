@@ -56,18 +56,6 @@ export class PrmojiApp {
       return;
     }
 
-    if (this.notificationsChannelId && shouldNotify(event)) {
-      logger.info("[app] Event meets notification criteria, sending message.");
-      await this.slackClient.sendMessage(
-        getMessage(event),
-        this.notificationsChannelId,
-      );
-    } else {
-      logger.info(
-        "[app] Event does not meet notification criteria, not sending message",
-      );
-    }
-
     logger.debug("[app] Looking up PR in the storage");
     const result = await this.storage.get(event.url);
 
@@ -102,6 +90,18 @@ export class PrmojiApp {
         }
       } else {
         logger.info("[app] Should not add emoji for this event.");
+      }
+
+      if (this.notificationsChannelId && shouldNotify(event)) {
+        logger.info("[app] Event meets notification criteria, sending message.");
+        await this.slackClient.sendMessage(
+          getMessage(event),
+          this.notificationsChannelId,
+        );
+      } else {
+        logger.info(
+          "[app] Event does not meet notification criteria, not sending message",
+        );
       }
 
       if (event.action === Actions.MERGED || event.action === Actions.CLOSED) {
