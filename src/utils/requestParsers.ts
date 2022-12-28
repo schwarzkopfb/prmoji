@@ -1,7 +1,7 @@
-import SlackMessage from "../types/SlackMessage.ts";
-import SlackRequest from "../types/SlackRequest.ts";
-import GithubEvent from "../types/GithubEvent.ts";
-import GithubRequest from "../types/GithubRequest.ts";
+import SlackMessage from "../models/SlackMessage.ts";
+import SlackRequest from "../models/SlackRequest.ts";
+import GithubEvent from "../models/GithubEvent.ts";
+import GithubRequest from "../models/GithubRequest.ts";
 import {
   getPrAction,
   getPrAuthor,

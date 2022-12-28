@@ -8,9 +8,9 @@ import { PrmojiApp } from "./app/prmojiApp.ts";
 import { PostgresStorage } from "./storage/postgres.ts";
 import { SlackClient } from "./slack/client.ts";
 import * as logger from "./utils/logger.ts";
-import SlackRequest from "./types/SlackRequest.ts";
-import GithubRequest from "./types/GithubRequest.ts";
-import GithubRequestBody from "./types/GithubRequestBody.ts";
+import SlackRequest from "./models/SlackRequest.ts";
+import GithubRequest from "./models/GithubRequest.ts";
+import GithubRequestBody from "./models/GithubRequestBody.ts";
 import {
   parseGithubRequest,
   parseSlackRequest,
