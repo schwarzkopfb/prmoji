@@ -52,6 +52,9 @@ with Slack `DATABASE_URL` - the PostgreSQL DB URL including credentials
 Optionally the port can be overwritten with the `PORT` env var, defult is
 `5000`.
 
+Also if `NOTIFICATIONS_CHANNEL_ID` is set, Prmoji eill send updates to that channel when a tracked PR gets merged.
+Note: this feature requires `chat:write` or `chat:write.public` scope to be configured in Slack for the app.
+
 ### Slack
 
 Note: this only has to be done once.
