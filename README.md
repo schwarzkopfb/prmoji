@@ -42,15 +42,17 @@ Indexes:
 
 ### Service
 
-Run: `deno task start` Optionally you can specify the log level with
-`deno task start -- --loglevel=X` where X is one of`: silent, error, info,
-debug, silly. (Default is info.)
+Run: `deno task start`
+
+Optionally you can specify the log level with
+`deno task start -- --loglevel=X` where X is one of: `silent`, `error`, `info`,
+`debug`, `silly`. (Default is `info`.)
 
 You'll have to expose the following env vars: `SLACK_TOKEN` - for communicating
 with Slack `DATABASE_URL` - the PostgreSQL DB URL including credentials
 
-Optionally the port can be overwritten with the `PORT` env var, defult is
-`5000`.
+The port can be overwritten with the `PORT` env var, defult is
+`5000`. E.g. `PORT=4242 deno task start`.
 
 Also if `NOTIFICATIONS_CHANNEL_ID` is set, Prmoji eill send updates to that channel when a tracked PR gets merged.
 Note: this feature requires `chat:write` or `chat:write.public` scope to be configured in Slack for the app.
