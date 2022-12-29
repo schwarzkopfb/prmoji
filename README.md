@@ -23,6 +23,8 @@ It requires the latest
 - `deno task dev` - start service and listen to source file changes and
   auto-restart it
 
+Integrates seamlessly with [Deno Deploy](https://deno.com/deploy).
+
 ### Database
 
 You'll need a PostgreSQL database with the following table:

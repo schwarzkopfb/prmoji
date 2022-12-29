@@ -2,7 +2,7 @@ import {
   Application,
   Context,
   Router,
-} from "https://deno.land/x/oak@v11.1.0/mod.ts";
+} from "oak";
 
 import { PrmojiApp } from "./app/prmojiApp.ts";
 import { PostgresStorage } from "./storage/postgres.ts";

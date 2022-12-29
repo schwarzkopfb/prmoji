@@ -1,4 +1,4 @@
-import { WebClient } from "https://deno.land/x/slack_web_api@6.7.2/mod.js";
+import { WebClient } from "@slack/web-api";
 import * as logger from "../utils/logger.ts";
 
 export class SlackClient {
