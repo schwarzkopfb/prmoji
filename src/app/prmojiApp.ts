@@ -93,7 +93,9 @@ export class PrmojiApp {
       }
 
       if (this.notificationsChannelId && shouldNotify(event)) {
-        logger.info("[app] Event meets notification criteria, sending message.");
+        logger.info(
+          "[app] Event meets notification criteria, sending message.",
+        );
         await this.slackClient.sendMessage(
           getMessage(event),
           this.notificationsChannelId,

@@ -19,9 +19,7 @@ into the database (URL, message channel, message timestamp).
 It requires the latest
 [Deno CLI](https://deno.land/manual/getting_started/installation).
 
-- `deno task start` - start service
-- `deno task dev` - start service and listen to source file changes and
-  auto-restart it
+Run `deno task start` to start the service.
 
 Integrates seamlessly with [Deno Deploy](https://deno.com/deploy).
 
@@ -42,26 +40,35 @@ Indexes:
     "pr_messages_pkey" PRIMARY KEY, btree (id)
 ```
 
+For ease of setup here's a pre-cooked SQL query to initialize that table:
+
+```SQL
+CREATE TABLE pr_messages(id SERIAL PRIMARY KEY, inserted_at TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW(), pr_url VARCHAR(50) NOT NULL, message_channel VARCHAR(30), message_timestamp VARCHAR(20));
+```
+
 ### Service
 
 Run: `deno task start`
 
-Optionally you can specify the log level with
-`deno task start -- --loglevel=X` where X is one of: `silent`, `error`, `info`,
-`debug`, `silly`. (Default is `info`.)
+Optionally you can specify the log level with `deno task start -- --loglevel=X`
+where X is one of: `silent`, `error`, `info`, `debug`, `silly`. (Default is
+`info`.)
 
-You'll have to expose the following env vars: `SLACK_TOKEN` - for communicating
-with Slack `DATABASE_URL` - the PostgreSQL DB URL including credentials
+You'll have to expose the following env vars:
 
-The port can be overwritten with the `PORT` env var, defult is
-`5000`. E.g. `PORT=4242 deno task start`.
+- `SLACK_TOKEN` - for communicating with Slack
+- `DATABASE_URL` - the PostgreSQL DB URL including credentials
 
-Also if `NOTIFICATIONS_CHANNEL_ID` is set, Prmoji eill send updates to that channel when a tracked PR gets merged.
-Note: this feature requires `chat:write` or `chat:write.public` scope to be configured in Slack for the app.
+The port can be overwritten with the `PORT` var, defult is `5000`.
+
+Also if `NOTIFICATIONS_CHANNEL_ID` is set, Prmoji will send updates to that
+channel when a tracked PR gets merged. Note: this feature requires `chat:write`
+or `chat:write.public` scope to be configured in Slack for the app.
 
 ### Slack
 
-Note: this only has to be done once.
+Note: this only has to be done once. Note2: this guide is a bit otdated (Slack
+updated it's UI) but the main steps are same, so you should succeed with it.
 
 - Go to https://api.slack.com/apps/
 - Click Your apps
@@ -95,3 +102,16 @@ Note: this has to be done for every repository you wish to watch.
 - Tick Issue comments, Pull requests, Pull request reviews, and Pull request
   review comments
 - Click Add webhook
+
+## Development
+
+The project is aligned with Deno's philosophy, styling guide and based on the
+built-in tools like `deno lint`, `deno fmt` and `deno test`, etc.
+
+You have to set up at least the `SLACK_TOKEN` and `DATABASE_URL` env vars in
+your shell then run `deno task dev` to start the service and listen to source
+file changes and auto-restart.
+
+## License
+
+[GNU GPLv3](./LICENSE)

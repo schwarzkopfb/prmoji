@@ -1,8 +1,4 @@
-import {
-  Application,
-  Context,
-  Router,
-} from "oak";
+import { Application, Context, Router } from "oak";
 
 import { PrmojiApp } from "./app/prmojiApp.ts";
 import { PostgresStorage } from "./storage/postgres.ts";
