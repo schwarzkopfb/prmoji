@@ -40,10 +40,26 @@ Indexes:
     "pr_messages_pkey" PRIMARY KEY, btree (id)
 ```
 
+```
+                                                 Table "public.users"
+    Column     |            Type             | Collation | Nullable | Default | Storage  | Stats target | Description 
+---------------+-----------------------------+-----------+----------+---------+----------+--------------+-------------
+ slack_id      | character varying(12)       |           | not null |         | extended |              | 
+ inserted_at   | timestamp without time zone |           |          | now()   | plain    |              | 
+ gh_username   | character varying(39)       |           |          |         | extended |              | 
+ subscriptions | character varying(68)       |           |          |         | extended |              | 
+Indexes:
+    "users_pkey" PRIMARY KEY, btree (slack_id)
+```
+
 For ease of setup here's a pre-cooked SQL query to initialize that table:
 
 ```SQL
 CREATE TABLE pr_messages(id SERIAL PRIMARY KEY, inserted_at TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW(), pr_url VARCHAR(50) NOT NULL, message_channel VARCHAR(30), message_timestamp VARCHAR(20));
+```
+
+```SQL
+CREATE TABLE users(slack_id VARCHAR(12) PRIMARY KEY, inserted_at TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW(), gh_username VARCHAR(39), subscriptions VARCHAR(68));
 ```
 
 ### Service

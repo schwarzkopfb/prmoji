@@ -31,3 +31,5 @@ export class SlackClient {
     return this.client.chat.postMessage({ channel, text: message });
   }
 }
+
+export default SlackClient;

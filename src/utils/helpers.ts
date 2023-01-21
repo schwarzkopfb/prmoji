@@ -7,7 +7,7 @@ import {
   IGNORED_COMMENTERS,
   WATCHED_LABELS,
   WATCHED_REPOSITORIES,
-} from "./const.ts";
+} from "../const.ts";
 
 export function getPrUrl(requestBody: GithubRequestBody) {
   if (requestBody.pull_request) {
@@ -189,4 +189,8 @@ export function getMessage(event: GithubEvent) {
   const authorName = event.author || "(missing PR author)";
 
   return `Merged: <${prUrl}|${repoName} #${prNumber} ${truncatedTitle}> (by ${authorName})`;
+}
+
+export function formatEventList(events: Set<Actions>) {
+  return Array.from(events).map((e) => "`" + e + "`").join(", ");
 }

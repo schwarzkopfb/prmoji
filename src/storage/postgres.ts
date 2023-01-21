@@ -3,6 +3,7 @@ import { Client } from "postgres";
 import * as logger from "../utils/logger.ts";
 import PrRecord from "../models/PrRecord.ts";
 import { getDateStringForDeletion } from "../utils/helpers.ts";
+import { Actions } from "../const.ts";
 
 export class PostgresStorage {
   client: Client | undefined;
@@ -90,5 +91,55 @@ export class PostgresStorage {
   deleteAll() {
     logger.debug("[storage] deleting all entries");
     return this.execute("DELETE FROM pr_messages");
+  }
+
+  setGitHubUsername(userId: string, username: string) {
+    logger.debug(
+      "[storage] setting GitHub username",
+      username,
+      "for user",
+      userId,
+    );
+
+    return this.execute(
+      `INSERT INTO users (slack_id, gh_username) VALUES ('${userId}', '${username}') ON CONFLICT (slack_id) DO UPDATE SET gh_username = EXCLUDED.gh_username;`,
+    );
+  }
+
+  async getGitHubUsername(userId: string): Promise<string | null> {
+    logger.debug("[storage] getting GitHub username for user", userId);
+
+    const [row] = await this.execute(
+      `SELECT gh_username FROM users WHERE slack_id = '${userId}'`,
+    ) as { ghUsername: string }[];
+
+    return row?.ghUsername || null;
+  }
+
+  async getSubscriptions(userId: string): Promise<Set<Actions>> {
+    logger.debug("[storage] getting subscriptions for user", userId);
+
+    const [row] = await this.execute(
+      `SELECT subscriptions FROM users WHERE slack_id = '${userId}'`,
+    ) as { subscriptions: string }[];
+
+    return new Set(
+      (row?.subscriptions || "").split(/\s+|,+/g).filter(Boolean) as Actions[],
+    );
+  }
+
+  setSubscriptions(userId: string, subscriptions: Set<Actions>) {
+    const subscriptionsstr = Array.from(subscriptions).join(",");
+
+    logger.debug(
+      "[storage] setting subscriptions",
+      subscriptionsstr,
+      "for user",
+      userId,
+    );
+
+    return this.execute(
+      `INSERT INTO users (slack_id, subscriptions) VALUES ('${userId}', '${subscriptionsstr}') ON CONFLICT (slack_id) DO UPDATE SET subscriptions = EXCLUDED.subscriptions;`,
+    );
   }
 }
