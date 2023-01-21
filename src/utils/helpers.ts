@@ -204,7 +204,7 @@ export function getDirectNotificationMessage(event: GithubEvent) {
   const sender = event.sender || "(missing sender)";
   const prUrl = event.url || "(missing PR URL)";
   const action = event.action || "(missing action)";
-  
+
   switch (action) {
     case Actions.CREATED:
       return `${sender} created <${prUrl}| PR> :heavy_plus_sign:`;
