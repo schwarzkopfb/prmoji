@@ -1,4 +1,4 @@
-import { Actions } from "../utils/const.ts";
+import { Actions } from "../const.ts";
 
 export default interface GithubRequestBody {
   action: Actions;
@@ -43,4 +43,7 @@ export default interface GithubRequestBody {
     channel: string;
     event_ts: string;
   };
+  sender?: {
+    login: string;
+  }
 }

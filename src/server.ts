@@ -1,5 +1,4 @@
 import { Application, Context, Router } from "oak";
-
 import { PrmojiApp } from "./app/prmojiApp.ts";
 import { PostgresStorage } from "./storage/postgres.ts";
 import { SlackClient } from "./slack/client.ts";
@@ -9,9 +8,11 @@ import GithubRequest from "./models/GithubRequest.ts";
 import GithubRequestBody from "./models/GithubRequestBody.ts";
 import {
   parseGithubRequest,
+  parseSlackCommand,
   parseSlackRequest,
 } from "./utils/requestParsers.ts";
 import { getLogLevelFromArgs } from "./utils/helpers.ts";
+import { UNKNOWN_COMMAND_MESSAGE } from "./const.ts";
 
 const PORT = parseInt(Deno.env.get("PORT") || "5000", 10);
 const SLACK_TOKEN = Deno.env.get("SLACK_TOKEN");
@@ -47,6 +48,7 @@ router
   .get("/", healthcheck)
   .post("/event/github", handleGithubEvent)
   .post("/event/slack", handleSlackEvent)
+  .post("/event/slack/command", handleSlackCommand)
   .post("/cleanup/", handleCleanupRequest);
 
 server.addEventListener("listen", ({ hostname, port, secure }) => {
@@ -94,6 +96,19 @@ async function handleSlackEvent({ request, response }: Context) {
   } else {
     response.body = "OK";
     app.handleMessage(parseSlackRequest({ body } as SlackRequest));
+  }
+}
+
+async function handleSlackCommand({ request, response }: Context) {
+  logger.info("[API] received Slack command");
+  const result = request.body({ type: "form" });
+  const params = await result.value;
+  const command = parseSlackCommand(params);
+
+  if (command) {
+    response.body = await app.handleCommand(command);
+  } else {
+    response.body = UNKNOWN_COMMAND_MESSAGE;
   }
 }
 

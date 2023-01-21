@@ -7,7 +7,7 @@ import {
   IGNORED_COMMENTERS,
   WATCHED_LABELS,
   WATCHED_REPOSITORIES,
-} from "./const.ts";
+} from "../const.ts";
 
 export function getPrUrl(requestBody: GithubRequestBody) {
   if (requestBody.pull_request) {
@@ -83,6 +83,11 @@ export function getPrTitle(requestBody: GithubRequestBody) {
     (requestBody.pull_request && requestBody.pull_request.title)
   );
 }
+
+export function getPrSender(requestBody: GithubRequestBody) {
+  return requestBody.sender && requestBody.sender.login;
+}
+
 type ActionConditions = {
   [key in Actions]: (
     eventType: string,
@@ -189,4 +194,40 @@ export function getMessage(event: GithubEvent) {
   const authorName = event.author || "(missing PR author)";
 
   return `Merged: <${prUrl}|${repoName} #${prNumber} ${truncatedTitle}> (by ${authorName})`;
+}
+
+export function formatEventList(events: Set<Actions>) {
+  return Array.from(events).map((e) => "`" + e + "`").join(", ");
+}
+
+export function getDirectNotificationMessage(event: GithubEvent) {
+  const sender = event.sender || "(missing sender)";
+  const prUrl = event.url || "(missing PR URL)";
+  const action = event.action || "(missing action)";
+  
+  switch (action) {
+    case Actions.CREATED:
+      return `${sender} created <${prUrl}| PR> :heavy_plus_sign:`;
+
+    case Actions.COMMENTED:
+      return `${sender} commented on your <${prUrl}|PR> :speech_balloon:`;
+
+    case Actions.APPROVED:
+      return `${sender} approved your <${prUrl}|PR> :white_check_mark:`;
+
+    case Actions.CHANGES_REQUESTED:
+      return `${sender} requested changes on your <${prUrl}|PR> :no_entry:`;
+
+    case Actions.SUBMITTED:
+      return `${sender} submitted your <${prUrl}|PR> :rocket:`;
+
+    case Actions.MERGED:
+      return `${sender} merged your <${prUrl}|PR> :merged:`;
+
+    case Actions.CLOSED:
+      return `${sender} closed your <${prUrl}|PR> :wastebasket:`;
+
+    default:
+      return `${sender} did something to your <${prUrl}|PR> :question:`;
+  }
 }

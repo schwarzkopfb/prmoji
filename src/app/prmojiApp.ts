@@ -1,15 +1,30 @@
 import * as logger from "../utils/logger.ts";
 import GithubEvent from "../models/GithubEvent.ts";
 import SlackMessage from "../models/SlackMessage.ts";
-import { Actions, EmojiMap } from "../utils/const.ts";
-import { SlackClient } from "../slack/client.ts";
+import SlackCommand from "../models/SlackCommand.ts";
+import { Actions, EmojiMap } from "../const.ts";
+import SlackClient from "../slack/client.ts";
 import { PostgresStorage } from "../storage/postgres.ts";
 import {
+  formatEventList,
   getMessage,
   getPrUrlsFromString,
   shouldAddEmoji,
   shouldNotify,
+  getDirectNotificationMessage,
+getPrSender,
 } from "../utils/helpers.ts";
+import {
+  APP_NAME,
+  HELP_MESSAGE,
+  UNKNOWN_COMMAND_MESSAGE,
+  UNKNOWN_USER_MESSAGE,
+} from "../const.ts";
+import { SlackSubcommands } from "../models/SlackSubcommand.ts";
+import SlackSubscribeSubcommand from "../models/SlackSubscribeSubcommand.ts";
+import SlackUnsubscribeSubcommand from "../models/SlackUnsubscribeSubcommand.ts";
+import SlackGitHubUsernameSubcommand from "../models/SlackGitHubUsernameSubcommand.ts";
+import SlackCleanupSubcommand from "../models/SlackCleanupSubcommand.ts";
 
 export class PrmojiApp {
   storage: PostgresStorage;
@@ -82,16 +97,22 @@ export class PrmojiApp {
       if (shouldAddEmoji(event)) {
         for (const item of result) {
           logger.info("[app] Adding emoji", emoji);
-          await this.slackClient.addEmoji(
-            emoji,
-            item.messageChannel,
-            item.messageTimestamp,
-          );
+
+          try {
+            await this.slackClient.addEmoji(
+              emoji,
+              item.messageChannel,
+              item.messageTimestamp,
+            );
+          } catch (e) {
+            logger.error("[app] Error adding emoji:", e);
+          }
         }
       } else {
         logger.info("[app] Should not add emoji for this event.");
       }
 
+      // send merge notification to the configured channel
       if (this.notificationsChannelId && shouldNotify(event)) {
         logger.info(
           "[app] Event meets notification criteria, sending message.",
@@ -106,10 +127,133 @@ export class PrmojiApp {
         );
       }
 
+      // send direct activity notification to subscribed user
+      if (event.author !== undefined) {
+        const user = await this.storage.getUserByGitHubUsername(event.author);
+
+        if (user && user.subscriptions.has(event.action)) {
+          logger.info(
+            "[app] User has subscribed to this event, sending message.",
+          );
+          await this.slackClient.sendMessage(
+            getDirectNotificationMessage(event),
+            user.slackId,
+          );
+        }
+      }
+
       if (event.action === Actions.MERGED || event.action === Actions.CLOSED) {
         logger.debug("[app] Deleting", event.url);
         await this.storage.deleteByPrUrl(event.url);
       }
+    }
+  }
+
+  async handleCommand(command: SlackCommand): Promise<string> {
+    logger.info("[app] Received Slack command:", command);
+
+    switch (command.subcommand.kind) {
+      case SlackSubcommands.GITHUB_USERNAME: {
+        const { username } = command
+          .subcommand as SlackGitHubUsernameSubcommand;
+
+        if (username) {
+          await this.storage.setGitHubUsername(
+            command.userId,
+            username,
+          );
+          return `Your GitHub username is now set to \`${username}\`. Use \`/${APP_NAME} subscribe <event>\` to receive notifications about your PRs.`;
+        } else {
+          return `Your GitHub username is \`${await this.storage
+            .getGitHubUsername(command.userId)}\``;
+        }
+      }
+
+      case SlackSubcommands.SUBSCRIBE: {
+        const { events } = command.subcommand as SlackSubscribeSubcommand;
+        const username = await this.storage.getGitHubUsername(command.userId);
+
+        if (!username) {
+          return UNKNOWN_USER_MESSAGE;
+        }
+
+        const subscriptions = await this.storage
+          .getSubscriptionsByUserId(command.userId);
+
+        for (const event of events) {
+          subscriptions.add(event);
+        }
+
+        await this.storage.setSubscriptionsByUserId(
+          command.userId,
+          subscriptions,
+        );
+
+        return `You will now be notified about ${
+          formatEventList(events)
+        } events.`;
+      }
+
+      case SlackSubcommands.UNSUBSCRIBE: {
+        const { events } = command.subcommand as SlackUnsubscribeSubcommand;
+        const username = await this.storage.getGitHubUsername(command.userId);
+
+        if (!username) {
+          return UNKNOWN_USER_MESSAGE;
+        }
+
+        const subscriptions = await this.storage
+          .getSubscriptionsByUserId(command.userId);
+
+        for (const event of events) {
+          subscriptions.delete(event);
+        }
+
+        await this.storage.setSubscriptionsByUserId(
+          command.userId,
+          subscriptions,
+        );
+
+        return `You will no longer be notified about ${
+          formatEventList(events)
+        } events.`;
+      }
+
+      case SlackSubcommands.LIST_SUBSCRIPTIONS: {
+        const username = await this.storage.getGitHubUsername(command.userId);
+
+        if (!username) {
+          return UNKNOWN_USER_MESSAGE;
+        }
+
+        const subscriptions = await this.storage.getSubscriptionsByUserId(
+          command.userId,
+        );
+
+        return subscriptions.size === 0
+          ? "You are not subscribed to any events."
+          : `You are subscribed to the following events: ${
+            formatEventList(subscriptions)
+          }`;
+      }
+
+      case SlackSubcommands.CLEANUP: {
+        const { days } = command.subcommand as SlackCleanupSubcommand;
+
+        if (days) {
+          await this.cleanupOld(days);
+        } else {
+          await this.cleanup();
+        }
+
+        return "Cleanup complete. :white_check_mark:";
+      }
+
+      case SlackSubcommands.HELP:
+        return HELP_MESSAGE;
+
+      default:
+        return UNKNOWN_COMMAND_MESSAGE;
     }
   }
 
@@ -120,6 +264,6 @@ export class PrmojiApp {
 
   cleanup() {
     logger.info("[app] Cleaning up all entries");
-    this.storage.deleteAll();
+    return this.storage.deleteAll();
   }
 }
