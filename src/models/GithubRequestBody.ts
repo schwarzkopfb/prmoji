@@ -43,4 +43,7 @@ export default interface GithubRequestBody {
     channel: string;
     event_ts: string;
   };
+  sender?: {
+    login: string;
+  }
 }

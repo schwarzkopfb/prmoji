@@ -2,6 +2,7 @@ import { delay } from "std/async/delay.ts";
 import { Client } from "postgres";
 import * as logger from "../utils/logger.ts";
 import PrRecord from "../models/PrRecord.ts";
+import User from "../models/User.ts";
 import { getDateStringForDeletion } from "../utils/helpers.ts";
 import { Actions } from "../const.ts";
 
@@ -116,7 +117,7 @@ export class PostgresStorage {
     return row?.ghUsername || null;
   }
 
-  async getSubscriptions(userId: string): Promise<Set<Actions>> {
+  async getSubscriptionsByUserId(userId: string): Promise<Set<Actions>> {
     logger.debug("[storage] getting subscriptions for user", userId);
 
     const [row] = await this.execute(
@@ -128,7 +129,7 @@ export class PostgresStorage {
     );
   }
 
-  setSubscriptions(userId: string, subscriptions: Set<Actions>) {
+  setSubscriptionsByUserId(userId: string, subscriptions: Set<Actions>) {
     const subscriptionsstr = Array.from(subscriptions).join(",");
 
     logger.debug(
@@ -141,5 +142,30 @@ export class PostgresStorage {
     return this.execute(
       `INSERT INTO users (slack_id, subscriptions) VALUES ('${userId}', '${subscriptionsstr}') ON CONFLICT (slack_id) DO UPDATE SET subscriptions = EXCLUDED.subscriptions;`,
     );
+  }
+
+  async getUserByGitHubUsername(
+    username: string,
+  ): Promise<User | null> {
+    logger.debug("[storage] getting subscriptions for GH user", username);
+
+    const [row] = await this.execute(
+      `SELECT slack_id, subscriptions, inserted_at FROM users WHERE gh_username = '${username}'`,
+    ) as { slackId: string; subscriptions: string; insertedAt: string }[];
+
+    if (!row) {
+      return null;
+    }
+
+    const subscriptions = new Set(
+      (row?.subscriptions || "").split(/\s+|,+/g).filter(Boolean) as Actions[],
+    );
+
+    return {
+      slackId: row.slackId,
+      subscriptions,
+      insertedAt: row.insertedAt,
+      ghUsername: username,
+    } as User;
   }
 }

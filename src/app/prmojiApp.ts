@@ -11,6 +11,8 @@ import {
   getPrUrlsFromString,
   shouldAddEmoji,
   shouldNotify,
+  getDirectNotificationMessage,
+getPrSender,
 } from "../utils/helpers.ts";
 import {
   APP_NAME,
@@ -95,16 +97,22 @@ export class PrmojiApp {
       if (shouldAddEmoji(event)) {
         for (const item of result) {
           logger.info("[app] Adding emoji", emoji);
-          await this.slackClient.addEmoji(
-            emoji,
-            item.messageChannel,
-            item.messageTimestamp,
-          );
+
+          try {
+            await this.slackClient.addEmoji(
+              emoji,
+              item.messageChannel,
+              item.messageTimestamp,
+            );
+          } catch (e) {
+            logger.error("[app] Error adding emoji:", e);
+          }
         }
       } else {
         logger.info("[app] Should not add emoji for this event.");
       }
 
+      // send merge notification to the configured channel
       if (this.notificationsChannelId && shouldNotify(event)) {
         logger.info(
           "[app] Event meets notification criteria, sending message.",
@@ -117,6 +125,21 @@ export class PrmojiApp {
         logger.info(
           "[app] Event does not meet notification criteria, not sending message",
         );
+      }
+
+      // send direct activity notification to subscribed user
+      if (event.author !== undefined) {
+        const user = await this.storage.getUserByGitHubUsername(event.author);
+
+        if (user && user.subscriptions.has(event.action)) {
+          logger.info(
+            "[app] User has subscribed to this event, sending message.",
+          );
+          await this.slackClient.sendMessage(
+            getDirectNotificationMessage(event),
+            user.slackId,
+          );
+        }
       }
 
       if (event.action === Actions.MERGED || event.action === Actions.CLOSED) {
@@ -155,13 +178,16 @@ export class PrmojiApp {
         }
 
         const subscriptions = await this.storage
-          .getSubscriptions(command.userId);
+          .getSubscriptionsByUserId(command.userId);
 
         for (const event of events) {
           subscriptions.add(event);
         }
 
-        await this.storage.setSubscriptions(command.userId, subscriptions);
+        await this.storage.setSubscriptionsByUserId(
+          command.userId,
+          subscriptions,
+        );
 
         return `You will now be notified about ${
           formatEventList(events)
@@ -177,13 +203,16 @@ export class PrmojiApp {
         }
 
         const subscriptions = await this.storage
-          .getSubscriptions(command.userId);
+          .getSubscriptionsByUserId(command.userId);
 
         for (const event of events) {
           subscriptions.delete(event);
         }
 
-        await this.storage.setSubscriptions(command.userId, subscriptions);
+        await this.storage.setSubscriptionsByUserId(
+          command.userId,
+          subscriptions,
+        );
 
         return `You will no longer be notified about ${
           formatEventList(events)
@@ -197,7 +226,7 @@ export class PrmojiApp {
           return UNKNOWN_USER_MESSAGE;
         }
 
-        const subscriptions = await this.storage.getSubscriptions(
+        const subscriptions = await this.storage.getSubscriptionsByUserId(
           command.userId,
         );
 

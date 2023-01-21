@@ -23,6 +23,7 @@ import {
   getPrRepoName,
   getPrTitle,
   getPrUrl,
+  getPrSender,
 } from "./helpers.ts";
 import * as logger from "../utils/logger.ts";
 
@@ -40,6 +41,7 @@ export function parseGithubRequest(event: GithubRequest): GithubEvent {
     author: getPrAuthor(body),
     labels: getPrLabels(body),
     title: getPrTitle(body),
+    sender: getPrSender(body),
   };
 }
 
