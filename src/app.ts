@@ -1,10 +1,10 @@
-import * as logger from "../utils/logger.ts";
-import GithubEvent from "../models/GithubEvent.ts";
-import SlackMessage from "../models/SlackMessage.ts";
-import SlackCommand from "../models/SlackCommand.ts";
-import { Actions, EmojiMap } from "../const.ts";
-import SlackClient from "../slack/client.ts";
-import { PostgresStorage } from "../storage/postgres.ts";
+import * as logger from "./utils/logger.ts";
+import GithubEvent from "./models/GithubEvent.ts";
+import SlackMessage from "./models/SlackMessage.ts";
+import SlackCommand from "./models/SlackCommand.ts";
+import { Actions, EmojiMap } from "./const.ts";
+import SlackClient from "./slack/client.ts";
+import { PostgresStorage } from "./storage/postgres.ts";
 import {
   formatEventList,
   getDirectNotificationMessage,
@@ -12,18 +12,18 @@ import {
   getPrUrlsFromString,
   shouldAddEmoji,
   shouldNotify,
-} from "../utils/helpers.ts";
+} from "./utils/helpers.ts";
 import {
   APP_NAME,
   HELP_MESSAGE,
   UNKNOWN_COMMAND_MESSAGE,
   UNKNOWN_USER_MESSAGE,
-} from "../const.ts";
-import { SlackSubcommands } from "../models/SlackSubcommand.ts";
-import SlackSubscribeSubcommand from "../models/SlackSubscribeSubcommand.ts";
-import SlackUnsubscribeSubcommand from "../models/SlackUnsubscribeSubcommand.ts";
-import SlackGitHubUsernameSubcommand from "../models/SlackGitHubUsernameSubcommand.ts";
-import SlackCleanupSubcommand from "../models/SlackCleanupSubcommand.ts";
+} from "./const.ts";
+import { SlackSubcommands } from "./models/SlackSubcommand.ts";
+import SlackSubscribeSubcommand from "./models/SlackSubscribeSubcommand.ts";
+import SlackUnsubscribeSubcommand from "./models/SlackUnsubscribeSubcommand.ts";
+import SlackGitHubUsernameSubcommand from "./models/SlackGitHubUsernameSubcommand.ts";
+import SlackCleanupSubcommand from "./models/SlackCleanupSubcommand.ts";
 
 export class PrmojiApp {
   storage: PostgresStorage;
