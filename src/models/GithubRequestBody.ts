@@ -45,5 +45,5 @@ export default interface GithubRequestBody {
   };
   sender?: {
     login: string;
-  }
+  };
 }

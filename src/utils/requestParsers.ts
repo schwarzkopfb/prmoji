@@ -21,9 +21,9 @@ import {
   getPrNumber,
   getPrRepoFullName,
   getPrRepoName,
+  getPrSender,
   getPrTitle,
   getPrUrl,
-  getPrSender,
 } from "./helpers.ts";
 import * as logger from "../utils/logger.ts";
 

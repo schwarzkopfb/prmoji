@@ -7,12 +7,11 @@ import SlackClient from "../slack/client.ts";
 import { PostgresStorage } from "../storage/postgres.ts";
 import {
   formatEventList,
+  getDirectNotificationMessage,
   getMessage,
   getPrUrlsFromString,
   shouldAddEmoji,
   shouldNotify,
-  getDirectNotificationMessage,
-getPrSender,
 } from "../utils/helpers.ts";
 import {
   APP_NAME,
@@ -117,10 +116,14 @@ export class PrmojiApp {
         logger.info(
           "[app] Event meets notification criteria, sending message.",
         );
-        await this.slackClient.sendMessage(
-          getMessage(event),
-          this.notificationsChannelId,
-        );
+        try {
+          await this.slackClient.sendMessage(
+            getMessage(event),
+            this.notificationsChannelId,
+          );
+        } catch (e) {
+          logger.error("[app] Error sending message:", e);
+        }
       } else {
         logger.info(
           "[app] Event does not meet notification criteria, not sending message",
