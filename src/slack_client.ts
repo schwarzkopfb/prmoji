@@ -1,5 +1,5 @@
 import { WebClient } from "@slack/web-api";
-import * as logger from "../utils/logger.ts";
+import * as logger from "./utils/logger.ts";
 
 export class SlackClient {
   // deno-lint-ignore no-explicit-any

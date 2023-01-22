@@ -3,7 +3,7 @@ import GithubEvent from "./models/GithubEvent.ts";
 import SlackMessage from "./models/SlackMessage.ts";
 import SlackCommand from "./models/SlackCommand.ts";
 import { Actions, EmojiMap } from "./const.ts";
-import SlackClient from "./slack/client.ts";
+import SlackClient from "./slack_client.ts";
 import { PostgresStorage } from "./storage/postgres.ts";
 import {
   formatEventList,
