@@ -1,10 +1,10 @@
 import { delay } from "std/async/delay.ts";
 import { Client } from "postgres";
-import * as logger from "../utils/logger.ts";
-import PrRecord from "../models/PrRecord.ts";
-import User from "../models/User.ts";
-import { getDateStringForDeletion } from "../utils/helpers.ts";
-import { Actions } from "../const.ts";
+import * as logger from "./utils/logger.ts";
+import PrRecord from "./models/PrRecord.ts";
+import User from "./models/User.ts";
+import { getDateStringForDeletion } from "./utils/helpers.ts";
+import { Actions } from "./const.ts";
 
 export class PostgresStorage {
   client: Client | undefined;

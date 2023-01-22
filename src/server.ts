@@ -1,6 +1,6 @@
 import { Application, Context, Router } from "oak";
 import { PrmojiApp } from "./app.ts";
-import { PostgresStorage } from "./storage/postgres.ts";
+import { PostgresStorage } from "./storage.ts";
 import { SlackClient } from "./slack_client.ts";
 import * as logger from "./utils/logger.ts";
 import SlackRequest from "./models/SlackRequest.ts";

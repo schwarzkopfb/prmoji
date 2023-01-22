@@ -1,4 +1,4 @@
-import * as logger from "../utils/logger.mjs";
+import * as logger from "./utils/logger.ts";
 
 export class TestStorage {
   constructor(initialContents = []) {
