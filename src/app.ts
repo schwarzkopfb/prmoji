@@ -131,10 +131,10 @@ export class PrmojiApp {
       }
 
       // send direct activity notification to subscribed user
-      if (event.author !== undefined) {
+      if (event.author !== undefined && event.sender !== event.author) {
         const user = await this.storage.getUserByGitHubUsername(event.author);
 
-        if (user && user.subscriptions.has(event.action)) {
+        if (user?.subscriptions.has(event.action)) {
           logger.info(
             "[app] User has subscribed to this event, sending message.",
           );
@@ -268,5 +268,12 @@ export class PrmojiApp {
   cleanup() {
     logger.info("[app] Cleaning up all entries");
     return this.storage.deleteAll();
+  }
+
+  introToUser(userId: string) {
+    this.slackClient.sendMessage(
+      HELP_MESSAGE,
+      userId
+    );
   }
 }
