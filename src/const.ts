@@ -8,7 +8,7 @@ export enum Actions {
   CLOSED = "closed",
 }
 
-export const EmojiMap = {
+export const PrActionEmojiMap = {
   [Actions.COMMENTED]: "speech_balloon",
   [Actions.APPROVED]: "white_check_mark",
   [Actions.CHANGES_REQUESTED]: "no_entry",
@@ -18,6 +18,10 @@ export const EmojiMap = {
   [Actions.CREATED]: null,
   [Actions.SUBMITTED]: null,
 };
+
+export const MessageEmojiMap = new Map([
+  [/^A new customer has just signed up/, "rocket_colossyan"],
+]);
 
 export const IGNORED_COMMENTERS = [
   "sonarcloud",

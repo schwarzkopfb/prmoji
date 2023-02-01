@@ -101,8 +101,8 @@ updated it's UI) but the main steps are same, so you should succeed with it.
 - Select Event subscriptions
 - Click Enable Events
 - Add https://<project_name>.deno.dev/event/slack as the URL
-- Go to "Slash commands" section to setup `/prmoji` command.
-  The url should be `https://<project_name>.deno.dev/event/slack/command`.
+- Go to "Slash commands" section to setup `/prmoji` command. The url should be
+  `https://<project_name>.deno.dev/event/slack/command`.
 - Navigate to Bot Users
 - Click Add a Bot User, then without changing anything click the Add a Bot User
   below the form

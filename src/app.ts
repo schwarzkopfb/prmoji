@@ -2,7 +2,7 @@ import * as logger from "./utils/logger.ts";
 import GithubEvent from "./models/GithubEvent.ts";
 import SlackMessage from "./models/SlackMessage.ts";
 import SlackCommand from "./models/SlackCommand.ts";
-import { Actions, EmojiMap } from "./const.ts";
+import { Actions, MessageEmojiMap, PrActionEmojiMap } from "./const.ts";
 import SlackClient from "./slack_client.ts";
 import { PostgresStorage } from "./storage.ts";
 import {
@@ -61,6 +61,21 @@ export class PrmojiApp {
       logger.debug("[app] Storing", prUrl);
       await this.storage.store(prUrl, message.channel, message.timestamp);
     }
+
+    for (const [pattern, emoji] of MessageEmojiMap) {
+      if (pattern.test(message.text)) {
+        logger.debug("[app] Adding emoji", emoji);
+        try {
+          await this.slackClient.addEmoji(
+            emoji,
+            message.channel,
+            message.timestamp,
+          );
+        } catch (e) {
+          logger.error(`[app] Error adding emoji (${emoji}):`, e);
+        }
+      }
+    }
   }
 
   async handlePrEvent(event: GithubEvent) {
@@ -85,7 +100,7 @@ export class PrmojiApp {
     );
 
     if (result.length > 0) {
-      const emoji = EmojiMap[event.action];
+      const emoji = PrActionEmojiMap[event.action];
       logger.debug("[app] Selected emoji:", emoji);
 
       if (!emoji) {
@@ -273,7 +288,7 @@ export class PrmojiApp {
   introToUser(userId: string) {
     this.slackClient.sendMessage(
       HELP_MESSAGE,
-      userId
+      userId,
     );
   }
 }
