@@ -3,5 +3,10 @@
     "start": "deno run --allow-env --allow-net src/server.ts",
     "dev": "deno run --allow-env --allow-net --watch src/server.ts"
   },
-  "importMap": "import_map.json"
+  "imports": {
+    "std/": "https://deno.land/std@0.175.0/",
+    "@slack/web-api": "https://deno.land/x/slack_web_api@6.7.2/mod.js",
+    "oak": "https://deno.land/x/oak@v11.1.0/mod.ts",
+    "postgres": "https://deno.land/x/postgres@v0.17.0/mod.ts"
+  }
 }
