@@ -286,7 +286,7 @@ export class PrmojiApp {
   }
 
   introToUser(userId: string) {
-    this.slackClient.sendMessage(
+    return this.slackClient.sendMessage(
       HELP_MESSAGE,
       userId,
     );
