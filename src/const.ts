@@ -21,6 +21,8 @@ export const PrActionEmojiMap = {
 
 export const MessageEmojiMap = new Map([
   [/^A new customer has just signed up/, "rocket_colossyan"],
+  [/A new corporate payment has been made/, "rocket_colossyan"],
+  [/New deal won!/, "rocket_colossyan"],
 ]);
 
 export const IGNORED_COMMENTERS = [
