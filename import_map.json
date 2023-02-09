@@ -1,10 +1,4 @@
 {
-  "tasks": {
-    "start": "deno run --allow-env --allow-net src/server.ts",
-    "dev": "deno run --allow-env --allow-net --watch src/server.ts",
-    "invite": "deno run --allow-env --allow-net scripts/invite.ts"
-  },
-  "importMap": "import_map.json",
   "imports": {
     "std/": "https://deno.land/std@0.175.0/",
     "@slack/web-api": "https://deno.land/x/slack_web_api@6.7.2/mod.js",
