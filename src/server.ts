@@ -49,7 +49,10 @@ router
   .post("/event/github", handleGithubEvent)
   .post("/event/slack", handleSlackEvent)
   .post("/event/slack/command", handleSlackCommand)
-  .post("/cleanup/", handleCleanupRequest);
+  .post("/cleanup/", handleCleanupRequest)
+  .get('/kakas', (ctx) => {
+    ctx.response.body = 'kakas';
+  });
 
 server.addEventListener("listen", ({ hostname, port, secure }) => {
   logger.info(
