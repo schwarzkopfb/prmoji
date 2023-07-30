@@ -1,7 +1,7 @@
 {
   "tasks": {
-    "start": "deno run --allow-env --allow-net src/server.ts",
-    "dev": "deno run --allow-env --allow-net --watch src/server.ts",
+    "start": "deno run --allow-env --allow-net server.ts",
+    "dev": "deno run --allow-env --allow-net --watch server.ts",
     "invite": "deno run --allow-env --allow-net scripts/invite.ts"
   },
   "imports": {
