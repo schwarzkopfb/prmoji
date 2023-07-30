@@ -2,7 +2,7 @@ export const RX_PR_URL =
   /https:\/\/github.com\/([\w-]+)\/([\w-]+)\/pull\/(\d+)/;
 
 export const RELEASE_CHECKLIST_HEADING = "## Release checklist";
-export const PR_VALIDATION_DELAY = 10 * 1000;
+export const PR_VALIDATION_DELAY = 15 * 60 * 1000;
 
 export enum Actions {
   CREATED = "created",
