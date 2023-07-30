@@ -1,7 +1,5 @@
 import { Application, Context, Router } from "oak";
 import { PrmojiApp } from "./app.ts";
-import { PostgresStorage } from "./storage.ts";
-import { SlackClient } from "./slack_client.ts";
 import * as logger from "./utils/logger.ts";
 import SlackRequest from "./models/slack_request.ts";
 import GithubRequest from "./models/github_request.ts";
@@ -15,31 +13,18 @@ import { getLogLevelFromArgs } from "./utils/helpers.ts";
 import { UNKNOWN_COMMAND_MESSAGE } from "./const.ts";
 
 const PORT = parseInt(Deno.env.get("PORT") || "5000", 10);
-const SLACK_TOKEN = Deno.env.get("SLACK_TOKEN");
-const CONNECTION_STRING = Deno.env.get("DATABASE_URL");
 const NOTIFICATIONS_CHANNEL_ID = Deno.env.get("NOTIFICATIONS_CHANNEL_ID");
 const INTERNAL_REST_API_KEY = Deno.env.get("INTERNAL_REST_API_KEY");
 
 const startLog = logger.createLabeledLogger("start");
 const apiLog = logger.createLabeledLogger("rest");
 
-if (!SLACK_TOKEN) {
-  startLog.error("SLACK_TOKEN environment variable is not set");
-  Deno.exit(1);
-}
-if (!CONNECTION_STRING) {
-  startLog.error("DATABASE_URL environment variable is not set");
-  Deno.exit(1);
-}
-
 const LOG_LEVEL = getLogLevelFromArgs(Deno.args);
 logger.setLevel(LOG_LEVEL);
 
-const storage = new PostgresStorage(CONNECTION_STRING);
-const slackClient = new SlackClient(SLACK_TOKEN);
 const server = new Application();
 const router = new Router();
-const app = new PrmojiApp(storage, slackClient, NOTIFICATIONS_CHANNEL_ID);
+const app = new PrmojiApp(NOTIFICATIONS_CHANNEL_ID);
 
 router
   .get("/", healthcheck)
@@ -47,7 +32,8 @@ router
   .post("/event/slack", handleSlackEvent)
   .post("/event/slack/command", handleSlackCommand)
   .post("/cleanup/", handleCleanupRequest)
-  .get("/validate-prs", handleValidatePrsRequest);
+  .get("/validate-prs", handleValidatePrsRequest)
+  .get("/test", handleTestRequest); // TODO: remove
 
 server.addEventListener("listen", ({ hostname, port, secure }) => {
   startLog.info(
@@ -130,4 +116,11 @@ async function handleValidatePrsRequest(ctx: Context) {
   );
   await app.validatePrs();
   ctx.response.body = "OK";
+}
+
+import { enqueuePrValidation } from "./utils/queue.ts";
+async function handleTestRequest({ response }: Context) {
+  apiLog.info("received test request");
+  await enqueuePrValidation("https://github.com/colossyan/app/pull/1757");
+  response.body = "OK";
 }

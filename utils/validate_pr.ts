@@ -3,6 +3,9 @@ import {
   RELEASE_CHECKLIST_HEADING,
   RX_PR_URL,
 } from "../const.ts";
+import { createLabeledLogger } from "./logger.ts";
+
+const { debug } = createLabeledLogger("validate_pr");
 
 const reqInfo = {
   headers: {
@@ -42,10 +45,11 @@ export interface PrValidationResult {
  * @returns GitHub username of the user who didn't complete the checklist, or null if the checklist is complete or irrelevant.
  */
 export async function validatePr(url: string): Promise<PrValidationResult> {
+  debug("validating PR", url);
   const match = url.match(RX_PR_URL);
 
   if (!match) {
-    // not a PR URL
+    debug("not a PR URL");
     return { status: PrValidationResultStatus.Irrelevant };
   }
 
@@ -57,7 +61,7 @@ export async function validatePr(url: string): Promise<PrValidationResult> {
   const { body, user, merged } = await response.json();
 
   if (!merged) {
-    // PR not merged
+    debug("PR not merged");
     return { status: PrValidationResultStatus.Irrelevant };
   }
 
@@ -69,6 +73,7 @@ export async function validatePr(url: string): Promise<PrValidationResult> {
       if (line.startsWith("- [ ]")) {
         // skip strikethrough items
         if (!line.includes("~~")) {
+          debug("incomplete checklist item found for user", user?.login);
           return {
             status: PrValidationResultStatus.Incomplete,
             user: user?.login,
@@ -76,6 +81,7 @@ export async function validatePr(url: string): Promise<PrValidationResult> {
         }
       } // end of checklist (another heading)
       else if (line.startsWith("#")) {
+        debug("no incomplete checklist items found");
         return { status: PrValidationResultStatus.Complete };
       }
     } else if (line === RELEASE_CHECKLIST_HEADING) {
@@ -83,7 +89,7 @@ export async function validatePr(url: string): Promise<PrValidationResult> {
     }
   }
 
-  // if no checklist found, we assume it's complete
+  debug("no checklist found, or it is complete");
   return { status: PrValidationResultStatus.Complete };
 }
 

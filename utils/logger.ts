@@ -18,7 +18,7 @@ export enum Levels {
   SILLY = 4,
 }
 
-export const levelNames = {
+const levelNames = {
   [Levels.SILENT]: "SILENT",
   [Levels.ERROR]: "ERROR",
   [Levels.INFO]: "INFO",
@@ -30,7 +30,7 @@ let currentLevel = Levels.INFO;
 
 export function setLevel(level: Levels): void {
   currentLevel = level;
-  info("Logging level set to", levelNames[level]);
+  info("logging level set to", levelNames[level]);
 }
 
 function createLoggerFn(

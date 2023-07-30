@@ -3,8 +3,8 @@ import GithubEvent from "./models/github_event.ts";
 import SlackMessage from "./models/slack_message.ts";
 import SlackCommand from "./models/slack_command.ts";
 import { Actions, MessageEmojiMap, PrActionEmojiMap } from "./const.ts";
-import SlackClient from "./slack_client.ts";
-import { PostgresStorage } from "./storage.ts";
+import { addEmoji, sendMessage } from "./slack.ts";
+import { storage } from "./storage.ts";
 import {
   formatEventList,
   getDirectNotificationMessage,
@@ -26,132 +26,126 @@ import SlackUnsubscribeSubcommand from "./models/slack_unsubscribe_subcommand.ts
 import SlackGitHubUsernameSubcommand from "./models/slack_github_username_subcommand.ts";
 import SlackCleanupSubcommand from "./models/slack_cleanup_subcommand.ts";
 
-const log = createLabeledLogger("app");
+const { info, debug, error } = createLabeledLogger("app");
 
 export class PrmojiApp {
-  storage: PostgresStorage;
-  slackClient: SlackClient;
   notificationsChannelId: string | null;
 
   constructor(
-    storage: PostgresStorage,
-    slackClient: SlackClient,
     notificationsChannelId: string | null = null,
   ) {
-    log.debug("Initializing PrmojiApp instance");
-    this.storage = storage;
-    this.slackClient = slackClient;
+    debug("initializing PrmojiApp instance");
     this.notificationsChannelId = notificationsChannelId;
   }
 
   async handleMessage(message: SlackMessage) {
-    log.info(
-      "Received Slack message",
+    info(
+      "received Slack message",
       message.text ? message.text.substr(0, 8) : "(no message text)",
     );
     if (!message.text || !message.channel || !message.timestamp) {
-      log.debug("Missing field(s), discarding message.");
+      debug("missing field(s), discarding message");
       return;
     }
 
     const prUrlsInMessage = getPrUrlsFromString(message.text);
-    log.debug(
+    debug(
       "PR URLs in message:",
       prUrlsInMessage.length > 0 ? prUrlsInMessage : "none",
     );
 
     for (const prUrl of prUrlsInMessage) {
-      log.debug("Storing", prUrl);
-      await this.storage.store(prUrl, message.channel, message.timestamp);
+      debug("storing", prUrl);
+      await storage.store(prUrl, message.channel, message.timestamp);
     }
 
     for (const [pattern, emoji] of MessageEmojiMap) {
       if (pattern.test(message.text)) {
-        log.debug("Adding emoji", emoji);
+        debug("adding emoji", emoji);
         try {
-          await this.slackClient.addEmoji(
+          await addEmoji(
             emoji,
             message.channel,
             message.timestamp,
           );
         } catch (e) {
-          log.error(`Error adding emoji (${emoji}):`, e);
+          error(`error adding emoji (${emoji}):`, e);
         }
       }
     }
   }
 
   async handlePrEvent(event: GithubEvent) {
-    log.info("Received PR event:", event.number || "(no PR number)");
+    info("received PR event:", event.number || "(no PR number)");
 
     if (!event.url || !event.action) {
-      log.debug("Missing field(s), discarding PR event");
+      debug("missing field(s), discarding PR event");
       return;
     }
 
-    log.debug("Looking up PR in the storage");
-    const result = await this.storage.get(event.url);
+    debug("looking up PR in the storage");
+    const result = await storage.get(event.url);
 
     if (!result) {
-      log.debug("No matching item found, discarding event");
+      debug("no matching item found, discarding event");
       return;
     }
 
-    log.debug(
-      `Got ${result.length} matching item ${result.length === 1 ? "" : "s"}`,
+    debug(
+      `got ${result.length} matching item ${result.length === 1 ? "" : "s"}`,
     );
 
     if (result.length > 0) {
       const emoji = PrActionEmojiMap[event.action];
-      log.debug("Selected emoji:", emoji);
+      debug("selected emoji:", emoji);
 
       if (!emoji) {
-        log.debug("No emoji for this event, discarding.");
+        debug("no emoji for this event, discarding");
         return;
       }
 
       if (shouldAddEmoji(event)) {
         for (const item of result) {
-          log.info("Adding emoji", emoji);
+          info("adding emoji", emoji);
 
           try {
-            await this.slackClient.addEmoji(
+            await addEmoji(
               emoji,
               item.messageChannel,
               item.messageTimestamp,
             );
           } catch (e) {
-            log.error("Error adding emoji:", e);
+            error("error adding emoji:", e);
           }
         }
       } else {
-        log.info("Should not add emoji for this event");
+        info("should not add emoji for this event");
       }
 
       // send merge notification to the configured channel
       if (this.notificationsChannelId && shouldNotify(event)) {
-        log.info("Event meets notification criteria, sending message");
+        info("event meets notification criteria, sending message");
         try {
-          await this.slackClient.sendMessage(
+          await sendMessage(
             getMessage(event),
             this.notificationsChannelId,
           );
         } catch (e) {
-          log.error("Error sending message:", e);
+          error("error sending message:", e);
         }
       } else {
-        log.info(
-          "Event does not meet notification criteria, not sending message",
+        info(
+          "event does not meet notification criteria, not sending message",
         );
       }
 
       // send direct activity notification to subscribed user
       if (event.author !== undefined && event.sender !== event.author) {
-        const user = await this.storage.getUserByGitHubUsername(event.author);
+        const user = await storage.getUserByGitHubUsername(event.author);
 
         if (user?.subscriptions.has(event.action)) {
-          log.info("User has subscribed to this event, sending message");
-          await this.slackClient.sendMessage(
+          info("user has subscribed to this event, sending message");
+          await sendMessage(
             getDirectNotificationMessage(event),
             user.slackId,
           );
@@ -159,14 +153,14 @@ export class PrmojiApp {
       }
 
       if (event.action === Actions.CLOSED) {
-        log.debug("Deleting", event.url);
-        await this.storage.deleteByPrUrl(event.url);
+        debug("deleting", event.url);
+        await storage.deleteByPrUrl(event.url);
       }
     }
   }
 
   async handleCommand(command: SlackCommand): Promise<string> {
-    log.info("Received Slack command:", command);
+    info("received Slack command:", command);
 
     switch (command.subcommand.kind) {
       case SlackSubcommands.GITHUB_USERNAME: {
@@ -174,10 +168,10 @@ export class PrmojiApp {
           .subcommand as SlackGitHubUsernameSubcommand;
 
         if (username) {
-          await this.storage.setGitHubUsername(command.userId, username);
+          await storage.setGitHubUsername(command.userId, username);
           return `Your GitHub username is now set to \`${username}\`. Use \`/${APP_NAME} subscribe <event>\` to receive notifications about your PRs.`;
         } else {
-          return `Your GitHub username is \`${await this.storage
+          return `Your GitHub username is \`${await storage
             .getGitHubUsername(
               command.userId,
             )}\``;
@@ -186,13 +180,13 @@ export class PrmojiApp {
 
       case SlackSubcommands.SUBSCRIBE: {
         const { events } = command.subcommand as SlackSubscribeSubcommand;
-        const username = await this.storage.getGitHubUsername(command.userId);
+        const username = await storage.getGitHubUsername(command.userId);
 
         if (!username) {
           return UNKNOWN_USER_MESSAGE;
         }
 
-        const subscriptions = await this.storage.getSubscriptionsByUserId(
+        const subscriptions = await storage.getSubscriptionsByUserId(
           command.userId,
         );
 
@@ -200,7 +194,7 @@ export class PrmojiApp {
           subscriptions.add(event);
         }
 
-        await this.storage.setSubscriptionsByUserId(
+        await storage.setSubscriptionsByUserId(
           command.userId,
           subscriptions,
         );
@@ -214,13 +208,13 @@ export class PrmojiApp {
 
       case SlackSubcommands.UNSUBSCRIBE: {
         const { events } = command.subcommand as SlackUnsubscribeSubcommand;
-        const username = await this.storage.getGitHubUsername(command.userId);
+        const username = await storage.getGitHubUsername(command.userId);
 
         if (!username) {
           return UNKNOWN_USER_MESSAGE;
         }
 
-        const subscriptions = await this.storage.getSubscriptionsByUserId(
+        const subscriptions = await storage.getSubscriptionsByUserId(
           command.userId,
         );
 
@@ -228,7 +222,7 @@ export class PrmojiApp {
           subscriptions.delete(event);
         }
 
-        await this.storage.setSubscriptionsByUserId(
+        await storage.setSubscriptionsByUserId(
           command.userId,
           subscriptions,
         );
@@ -241,13 +235,13 @@ export class PrmojiApp {
       }
 
       case SlackSubcommands.LIST_SUBSCRIPTIONS: {
-        const username = await this.storage.getGitHubUsername(command.userId);
+        const username = await storage.getGitHubUsername(command.userId);
 
         if (!username) {
           return UNKNOWN_USER_MESSAGE;
         }
 
-        const subscriptions = await this.storage.getSubscriptionsByUserId(
+        const subscriptions = await storage.getSubscriptionsByUserId(
           command.userId,
         );
 
@@ -281,36 +275,36 @@ export class PrmojiApp {
   }
 
   cleanupOld(days = 7) {
-    log.info("Cleaning up entries as old as", days, "days or older");
-    return this.storage.deleteBeforeDays(days);
+    info("cleaning up entries as old as", days, "days or older");
+    return storage.deleteBeforeDays(days);
   }
 
   cleanup() {
-    log.info("Cleaning up all entries");
-    return this.storage.deleteAll();
+    info("cleaning up all entries");
+    return storage.deleteAll();
   }
 
   introToUser(userId: string) {
-    return this.slackClient.sendMessage(HELP_MESSAGE, userId);
+    return sendMessage(HELP_MESSAGE, userId);
   }
 
   async validatePrs() {
-    log.info("Checking PR release checklists");
-    const prs = await this.storage.getAllPrs();
+    debug("checking PR release checklists");
+    const prs = await storage.getAllPrs();
 
     for (const { prUrl } of prs) {
-      log.info("Checking release checklist", prUrl);
+      debug("checking release checklist", prUrl);
       const { status, user } = await validatePr(prUrl);
 
       if (status === PrValidationResultStatus.Complete) {
-        log.info("Deleting", prUrl);
-        await this.storage.deleteByPrUrl(prUrl);
+        info("deleting", prUrl);
+        await storage.deleteByPrUrl(prUrl);
       } else if (status === PrValidationResultStatus.Incomplete && user) {
-        log.info("Sending message about incomplete PR", prUrl);
-        const userMetaData = await this.storage.getUserByGitHubUsername(user);
+        info("sending message about incomplete PR", prUrl);
+        const userMetaData = await storage.getUserByGitHubUsername(user);
 
         if (userMetaData?.slackId) {
-          await this.slackClient.sendMessage(
+          await sendMessage(
             `:warning: release checklist is not complete for <${prUrl}|your PR>, please review it and make sure all neccessary items are checked`,
             userMetaData.slackId,
           );
