@@ -18,7 +18,7 @@ const reqInfo = {
  * @property Incomplete At least one item in the checklist has not been marked as complete.
  * @property Irrelevant The PR is not a PR for the configured repo, not merged, or does not contain a release checklist.
  */
-export enum PrCheckResultStatus {
+export enum PrValidationResultStatus {
   Complete = "complete",
   Incomplete = "incomplete",
   Irrelevant = "irrelevant",
@@ -30,8 +30,8 @@ export enum PrCheckResultStatus {
  * @property status Status of the check.
  * @property user GitHub username of the user who didn't complete the checklist, if any.
  */
-export interface PrCheckResult {
-  status: PrCheckResultStatus;
+export interface PrValidationResult {
+  status: PrValidationResultStatus;
   user?: string;
 }
 
@@ -41,14 +41,12 @@ export interface PrCheckResult {
  * @param url PR URL
  * @returns GitHub username of the user who didn't complete the checklist, or null if the checklist is complete or irrelevant.
  */
-export async function checkPrReleaseChecklist(
-  url: string,
-): Promise<PrCheckResult> {
+export async function validatePr(url: string): Promise<PrValidationResult> {
   const match = url.match(RX_PR_URL);
 
   if (!match) {
     // not a PR URL
-    return { status: PrCheckResultStatus.Irrelevant };
+    return { status: PrValidationResultStatus.Irrelevant };
   }
 
   const [, owner, repo, prNumber] = Array.from(match);
@@ -60,7 +58,7 @@ export async function checkPrReleaseChecklist(
 
   if (!merged) {
     // PR not merged
-    return { status: PrCheckResultStatus.Irrelevant };
+    return { status: PrValidationResultStatus.Irrelevant };
   }
 
   const lines = body.split("\n").map((line: string) => line.trim());
@@ -71,11 +69,14 @@ export async function checkPrReleaseChecklist(
       if (line.startsWith("- [ ]")) {
         // skip strikethrough items
         if (!line.includes("~~")) {
-          return { status: PrCheckResultStatus.Incomplete, user: user?.login };
+          return {
+            status: PrValidationResultStatus.Incomplete,
+            user: user?.login,
+          };
         }
       } // end of checklist (another heading)
       else if (line.startsWith("#")) {
-        return { status: PrCheckResultStatus.Complete };
+        return { status: PrValidationResultStatus.Complete };
       }
     } else if (line === RELEASE_CHECKLIST_HEADING) {
       checklistFound = true;
@@ -83,7 +84,7 @@ export async function checkPrReleaseChecklist(
   }
 
   // if no checklist found, we assume it's complete
-  return { status: PrCheckResultStatus.Complete };
+  return { status: PrValidationResultStatus.Complete };
 }
 
-export default checkPrReleaseChecklist;
+export default validatePr;

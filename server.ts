@@ -46,7 +46,7 @@ router
   .post("/event/slack", handleSlackEvent)
   .post("/event/slack/command", handleSlackCommand)
   .post("/cleanup/", handleCleanupRequest)
-  .get("/check-prs", handleCheckReleaseChecklistsRequest);
+  .get("/validate-prs", handleValidatePrsRequest);
 
 server.addEventListener("listen", ({ hostname, port, secure }) => {
   startLog.info(
@@ -114,8 +114,8 @@ async function handleCleanupRequest({ response }: Context) {
   response.body = "OK";
 }
 
-async function handleCheckReleaseChecklistsRequest({ response }: Context) {
+async function handleValidatePrsRequest({ response }: Context) {
   apiLog.info("received check release checklists request");
-  await app.checkPrReleaseChecklists();
+  await app.validatePrs();
   response.body = "OK";
 }

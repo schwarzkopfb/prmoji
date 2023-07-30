@@ -13,10 +13,7 @@ import {
   shouldAddEmoji,
   shouldNotify,
 } from "./utils/helpers.ts";
-import {
-  checkPrReleaseChecklist,
-  PrCheckResultStatus,
-} from "./utils/pr_checker.ts";
+import { PrValidationResultStatus, validatePr } from "./utils/validate_pr.ts";
 import {
   APP_NAME,
   HELP_MESSAGE,
@@ -297,18 +294,18 @@ export class PrmojiApp {
     return this.slackClient.sendMessage(HELP_MESSAGE, userId);
   }
 
-  async checkPrReleaseChecklists() {
+  async validatePrs() {
     log.info("Checking PR release checklists");
     const prs = await this.storage.getAllPrs();
 
     for (const { prUrl } of prs) {
       log.info("Checking release checklist", prUrl);
-      const { status, user } = await checkPrReleaseChecklist(prUrl);
+      const { status, user } = await validatePr(prUrl);
 
-      if (status === PrCheckResultStatus.Complete) {
+      if (status === PrValidationResultStatus.Complete) {
         log.info("Deleting", prUrl);
         await this.storage.deleteByPrUrl(prUrl);
-      } else if (status === PrCheckResultStatus.Incomplete && user) {
+      } else if (status === PrValidationResultStatus.Incomplete && user) {
         log.info("Sending message about incomplete PR", prUrl);
         const userMetaData = await this.storage.getUserByGitHubUsername(user);
 
