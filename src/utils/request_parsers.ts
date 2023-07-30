@@ -1,17 +1,17 @@
 import { Actions } from "../const.ts";
-import SlackMessage from "../models/SlackMessage.ts";
-import SlackRequest from "../models/SlackRequest.ts";
-import SlackCommand from "../models/SlackCommand.ts";
+import SlackMessage from "../models/slack_message.ts";
+import SlackRequest from "../models/slack_request.ts";
+import SlackCommand from "../models/slack_command.ts";
 import {
   SlackSubcommand,
   SlackSubcommands,
-} from "../models/SlackSubcommand.ts";
-import SlackGitHubUsernameSubcommand from "../models/SlackGitHubUsernameSubcommand.ts";
-import SlackSubscribeSubcommand from "../models/SlackSubscribeSubcommand.ts";
-import SlackUnsubscribeSubcommand from "../models/SlackUnsubscribeSubcommand.ts";
-import SlackCleanupSubcommand from "../models/SlackCleanupSubcommand.ts";
-import GithubEvent from "../models/GithubEvent.ts";
-import GithubRequest from "../models/GithubRequest.ts";
+} from "../models/slack_subcommand.ts";
+import SlackGitHubUsernameSubcommand from "../models/slack_github_username_subcommand.ts";
+import SlackSubscribeSubcommand from "../models/slack_subscribe_subcommand.ts";
+import SlackUnsubscribeSubcommand from "../models/slack_unsubscribe_subcommand.ts";
+import SlackCleanupSubcommand from "../models/slack_cleanup_subcommand.ts";
+import GithubEvent from "../models/github_event.ts";
+import GithubRequest from "../models/github_request.ts";
 import {
   getPrAction,
   getPrAuthor,
@@ -45,9 +45,9 @@ export function parseGithubRequest(event: GithubRequest): GithubEvent {
   };
 }
 
-export function parseSlackRequest(
-  { body: { event } }: SlackRequest,
-): SlackMessage {
+export function parseSlackRequest({
+  body: { event },
+}: SlackRequest): SlackMessage {
   return {
     id: event.client_msg_id,
     text: event.text,
@@ -56,9 +56,7 @@ export function parseSlackRequest(
   };
 }
 
-export function parseSlackSubscriptionEvent(
-  args: string[],
-): Set<Actions> {
+export function parseSlackSubscriptionEvent(args: string[]): Set<Actions> {
   const evts = new Set<Actions>();
 
   const addAll = () => {

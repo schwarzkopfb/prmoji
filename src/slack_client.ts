@@ -1,5 +1,7 @@
 import { WebClient } from "@slack/web-api";
-import * as logger from "./utils/logger.ts";
+import { createLabeledLogger } from "./utils/logger.ts";
+
+const log = createLabeledLogger("slack");
 
 export class SlackClient {
   // deno-lint-ignore no-explicit-any
@@ -10,22 +12,22 @@ export class SlackClient {
   }
 
   async addEmoji(name: string, channel: string, timestamp: string) {
-    logger.info(
-      "[slack] Slack client called with",
+    log.info(
+      "Slack client called with",
       JSON.stringify({ emoji: name, channel, timestamp }),
     );
 
     try {
       await this.client.reactions.add({ name, channel, timestamp });
     } catch (error) {
-      logger.error(error);
+      log.error(error);
       throw error;
     }
   }
 
   sendMessage(message: string, channel: string) {
-    logger.info(
-      "[slack] Slack client called with:",
+    log.info(
+      "Slack client called with:",
       JSON.stringify({ channel, message: "(hidden)" }),
     );
     return this.client.chat.postMessage({ channel, text: message });

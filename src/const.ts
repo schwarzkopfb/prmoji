@@ -1,3 +1,8 @@
+export const RX_PR_URL =
+  /https:\/\/github.com\/([\w-]+)\/([\w-]+)\/pull\/(\d+)/;
+
+export const RELEASE_CHECKLIST_HEADING = "## Release checklist";
+
 export enum Actions {
   CREATED = "created",
   COMMENTED = "commented",
@@ -25,9 +30,7 @@ export const MessageEmojiMap = new Map([
   [/New deal won!/, "rocket_colossyan"],
 ]);
 
-export const IGNORED_COMMENTERS = [
-  "sonarcloud",
-];
+export const IGNORED_COMMENTERS = ["sonarcloud"];
 
 // repositories to watch for notifications
 // empty array means watching all repositories
@@ -38,6 +41,7 @@ export const WATCHED_LABELS: string[] = [];
 
 export const APP_NAME = Deno.env.get("APP_NAME") || "prmoji";
 export const APP_DISPLAY_NAME = Deno.env.get("APP_DISPLAY_NAME") || "Prmoji";
+export const GITHUB_ACCESS_TOKEN = Deno.env.get("GITHUB_ACCESS_TOKEN");
 
 export const UNKNOWN_USER_MESSAGE =
   `I don't know you :crycat:. Type \`/${APP_NAME} ghuser <username>\` to set your GitHub username.`;

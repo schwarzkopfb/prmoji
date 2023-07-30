@@ -3,40 +3,36 @@ import { PrmojiApp } from "./app.ts";
 import { PostgresStorage } from "./storage.ts";
 import { SlackClient } from "./slack_client.ts";
 import * as logger from "./utils/logger.ts";
-import SlackRequest from "./models/SlackRequest.ts";
-import GithubRequest from "./models/GithubRequest.ts";
-import GithubRequestBody from "./models/GithubRequestBody.ts";
+import SlackRequest from "./models/slack_request.ts";
+import GithubRequest from "./models/github_request.ts";
+import GithubRequestBody from "./models/github_request_body.ts";
 import {
   parseGithubRequest,
   parseSlackCommand,
   parseSlackRequest,
-} from "./utils/requestParsers.ts";
+} from "./utils/request_parsers.ts";
 import { getLogLevelFromArgs } from "./utils/helpers.ts";
 import { UNKNOWN_COMMAND_MESSAGE } from "./const.ts";
 
 const PORT = parseInt(Deno.env.get("PORT") || "5000", 10);
 const SLACK_TOKEN = Deno.env.get("SLACK_TOKEN");
 const CONNECTION_STRING = Deno.env.get("DATABASE_URL");
-const NOTIFICATIONS_CHANNEL_ID = Deno.env.get(
-  "NOTIFICATIONS_CHANNEL_ID",
-);
+const NOTIFICATIONS_CHANNEL_ID = Deno.env.get("NOTIFICATIONS_CHANNEL_ID");
+
+const startLog = logger.createLabeledLogger("start");
+const apiLog = logger.createLabeledLogger("rest");
 
 if (!SLACK_TOKEN) {
-  logger.error(
-    "[startup] SLACK_TOKEN environment variable is not set",
-  );
+  startLog.error("SLACK_TOKEN environment variable is not set");
   Deno.exit(1);
 }
 if (!CONNECTION_STRING) {
-  logger.error(
-    "[startup] DATABASE_URL environment variable is not set",
-  );
+  startLog.error("DATABASE_URL environment variable is not set");
   Deno.exit(1);
 }
 
 const LOG_LEVEL = getLogLevelFromArgs(Deno.args);
 logger.setLevel(LOG_LEVEL);
-logger.info("[startup] Logging level set to", LOG_LEVEL);
 
 const storage = new PostgresStorage(CONNECTION_STRING);
 const slackClient = new SlackClient(SLACK_TOKEN);
@@ -50,15 +46,12 @@ router
   .post("/event/slack", handleSlackEvent)
   .post("/event/slack/command", handleSlackCommand)
   .post("/cleanup/", handleCleanupRequest)
-  .get('/kakas', (ctx) => {
-    ctx.response.body = 'kakas';
-  });
+  .get("/check-prs", handleCheckReleaseChecklistsRequest);
 
 server.addEventListener("listen", ({ hostname, port, secure }) => {
-  logger.info(
-    `[startup] server is listening on ${secure ? "https://" : "http://"}${
-      hostname ??
-        "localhost"
+  startLog.info(
+    `server is listening on ${secure ? "https://" : "http://"}${
+      hostname ?? "localhost"
     }:${port}`,
   );
 });
@@ -73,7 +66,7 @@ function healthcheck({ response }: Context) {
 }
 
 async function handleGithubEvent({ request, response }: Context) {
-  logger.info("[API] received GitHub event");
+  apiLog.info("received GitHub event");
   response.body = "OK";
 
   const result = request.body({ type: "json" });
@@ -89,7 +82,7 @@ async function handleGithubEvent({ request, response }: Context) {
 }
 
 async function handleSlackEvent({ request, response }: Context) {
-  logger.info("[API] received Slack event");
+  apiLog.info("received Slack event");
   const result = request.body({ type: "json" });
   const body = await result.value;
 
@@ -103,7 +96,7 @@ async function handleSlackEvent({ request, response }: Context) {
 }
 
 async function handleSlackCommand({ request, response }: Context) {
-  logger.info("[API] received Slack command");
+  apiLog.info("received Slack command");
   const result = request.body({ type: "form" });
   const params = await result.value;
   const command = parseSlackCommand(params);
@@ -116,7 +109,13 @@ async function handleSlackCommand({ request, response }: Context) {
 }
 
 async function handleCleanupRequest({ response }: Context) {
-  logger.info("[API] received cleanup request");
+  apiLog.info("received cleanup request");
   await app.cleanupOld();
+  response.body = "OK";
+}
+
+async function handleCheckReleaseChecklistsRequest({ response }: Context) {
+  apiLog.info("received check release checklists request");
+  await app.checkPrReleaseChecklists();
   response.body = "OK";
 }

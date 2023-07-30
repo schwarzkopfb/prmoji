@@ -1,6 +1,6 @@
-import GithubEvent from "../models/GithubEvent.ts";
-import GithubRequest from "../models/GithubRequest.ts";
-import GithubRequestBody from "../models/GithubRequestBody.ts";
+import GithubEvent from "../models/github_event.ts";
+import GithubRequest from "../models/github_request.ts";
+import GithubRequestBody from "../models/github_request_body.ts";
 import { Levels, silly as log } from "./logger.ts";
 import {
   Actions,
@@ -12,9 +12,7 @@ import {
 export function getPrUrl(requestBody: GithubRequestBody) {
   if (requestBody.pull_request) {
     return requestBody.pull_request.html_url;
-  } else if (
-    requestBody.issue && requestBody.issue.pull_request
-  ) {
+  } else if (requestBody.issue && requestBody.issue.pull_request) {
     return requestBody.issue.pull_request.html_url;
   }
 }
@@ -40,8 +38,11 @@ export function getPrAction(event: GithubRequest) {
 }
 
 export function getPrCommenter(requestBody: GithubRequestBody) {
-  return requestBody.comment && requestBody.comment.user &&
-    requestBody.comment.user.login;
+  return (
+    requestBody.comment &&
+    requestBody.comment.user &&
+    requestBody.comment.user.login
+  );
 }
 
 export function getPrCommentBody(requestBody: GithubRequestBody) {
@@ -65,16 +66,20 @@ export function getPrNumber(requestBody: GithubRequestBody) {
 
 export function getPrAuthor(requestBody: GithubRequestBody) {
   return (
-    (requestBody.issue && requestBody.issue.user &&
+    (requestBody.issue &&
+      requestBody.issue.user &&
       requestBody.issue.user.login) ||
-    (requestBody.pull_request && requestBody.pull_request.user &&
+    (requestBody.pull_request &&
+      requestBody.pull_request.user &&
       requestBody.pull_request.user.login)
   );
 }
 
 export function getPrLabels(requestBody: GithubRequestBody) {
-  return ((requestBody.pull_request && requestBody.pull_request.labels) || [])
-    .map((label) => label.name);
+  return (
+    (requestBody.pull_request && requestBody.pull_request.labels) ||
+    []
+  ).map((label) => label.name);
 }
 
 export function getPrTitle(requestBody: GithubRequestBody) {
@@ -112,10 +117,12 @@ export const actionConditions: ActionConditions = {
     requestBody.action === "submitted" &&
     requestBody.review?.state === "changes_requested",
   [Actions.MERGED]: (eventType: string, requestBody: GithubRequestBody) =>
-    eventType === "pull_request" && requestBody.action === "closed" &&
+    eventType === "pull_request" &&
+    requestBody.action === "closed" &&
     requestBody.pull_request?.merged,
   [Actions.CLOSED]: (eventType: string, requestBody: GithubRequestBody) =>
-    eventType === "pull_request" && requestBody.action === "closed" &&
+    eventType === "pull_request" &&
+    requestBody.action === "closed" &&
     !requestBody.pull_request?.merged,
 
   [Actions.CREATED]: (_et: string, _rb: GithubRequestBody) => false,
@@ -123,30 +130,9 @@ export const actionConditions: ActionConditions = {
 };
 
 export function getPrUrlsFromString(text: string) {
-  return text.match(/(https:\/\/github\.com\/[\w-_]+\/[\w-_]+\/pull\/\d+)/g) ??
-    [];
-}
-
-export function getLogLevelFromArgs(argv: string[]) {
-  let levelString = "info";
-  for (const arg of argv) {
-    if (arg.startsWith("--loglevel=")) {
-      levelString = arg.substr(11);
-      break;
-    }
-  }
-  switch (levelString) {
-    case "silent":
-      return Levels.SILENT;
-    case "error":
-      return Levels.ERROR;
-    case "debug":
-      return Levels.DEBUG;
-    case "silly":
-      return Levels.SILLY;
-    default:
-      return Levels.INFO;
-  }
+  return (
+    text.match(/(https:\/\/github\.com\/[\w-_]+\/[\w-_]+\/pull\/\d+)/g) ?? []
+  );
 }
 
 export function shouldAddEmoji(event: GithubEvent) {
@@ -160,8 +146,7 @@ export function shouldNotify(event: GithubEvent) {
 
   const isMerged = event.action === Actions.MERGED;
   const isWatchedRepository = WATCHED_REPOSITORIES.length === 0 ||
-    event.fullName &&
-      WATCHED_REPOSITORIES.includes(event.fullName);
+    (event.fullName && WATCHED_REPOSITORIES.includes(event.fullName));
   const hasWatchedLabel = WATCHED_LABELS.length === 0 ||
     event.labels.some((label) => WATCHED_LABELS.includes(label));
 
@@ -197,7 +182,9 @@ export function getMessage(event: GithubEvent) {
 }
 
 export function formatEventList(events: Set<Actions>) {
-  return Array.from(events).map((e) => "`" + e + "`").join(", ");
+  return Array.from(events)
+    .map((e) => "`" + e + "`")
+    .join(", ");
 }
 
 export function getDirectNotificationMessage(event: GithubEvent) {
@@ -229,5 +216,28 @@ export function getDirectNotificationMessage(event: GithubEvent) {
 
     default:
       return `${sender} did something to your <${prUrl}|PR> :question:`;
+  }
+}
+
+export function getLogLevelFromArgs(argv: string[]) {
+  let levelString = "info";
+  for (const arg of argv) {
+    if (arg.startsWith("--loglevel=")) {
+      levelString = arg.substring(11);
+      break;
+    }
+  }
+  switch (levelString) {
+    case "silent":
+      return Levels.SILENT;
+    case "error":
+      return Levels.ERROR;
+    case "debug":
+      return Levels.DEBUG;
+    case "silly":
+      return Levels.SILLY;
+    case "info":
+    default:
+      return Levels.INFO;
   }
 }

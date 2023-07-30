@@ -1,4 +1,4 @@
-import RequestBody from "./GithubRequestBody.ts";
+import RequestBody from "./github_request_body.ts";
 
 export default interface GithubRequest {
   headers: {

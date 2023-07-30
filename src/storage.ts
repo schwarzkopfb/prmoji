@@ -1,10 +1,12 @@
 import { delay } from "std/async/delay.ts";
 import { Client } from "postgres";
-import * as logger from "./utils/logger.ts";
-import PrRecord from "./models/PrRecord.ts";
-import User from "./models/User.ts";
+import { createLabeledLogger } from "./utils/logger.ts";
+import PrRecord from "./models/pr_record.ts";
+import User from "./models/user.ts";
 import { getDateStringForDeletion } from "./utils/helpers.ts";
 import { Actions } from "./const.ts";
+
+const log = createLabeledLogger("storage");
 
 export class PostgresStorage {
   client: Client | undefined;
@@ -17,12 +19,9 @@ export class PostgresStorage {
       try {
         await this.client?.connect();
         this.connected = true;
-        logger.info("[storage] Successfully connected to the database");
+        log.info("Successfully connected to the database");
       } catch (error) {
-        logger.error(
-          "[storage] Error while connecting to the database:",
-          error.message,
-        );
+        log.error("Error while connecting to the database:", error.message);
       }
     })();
   }
@@ -34,7 +33,7 @@ export class PostgresStorage {
   }
 
   async execute<T>(query: string): Promise<T[]> {
-    logger.debug("[storage] executing query:", query);
+    log.debug("executing query:", query);
 
     try {
       await this.waitForConnection();
@@ -46,21 +45,18 @@ export class PostgresStorage {
       const rows = (response?.rows ?? []) as T[];
       const result = JSON.stringify(rows);
 
-      logger.debug(
-        "[storage] DB returned:",
-        result.length > 0 ? result : "none",
-      );
+      log.debug("DB returned:", result.length > 0 ? result : "none");
 
       return rows;
     } catch (error) {
-      logger.error("[storage]", error);
+      log.error(error);
       throw error;
     }
   }
 
   store(prUrl: string, messageChannel: string, messageTimestamp: string) {
-    logger.debug(
-      "[storage] storing",
+    log.debug(
+      "storing",
       JSON.stringify({ prUrl, messageChannel, messageTimestamp }),
     );
     return this.execute(
@@ -69,19 +65,19 @@ export class PostgresStorage {
   }
 
   get(prUrl: string) {
-    logger.debug("[storage] getting", prUrl);
+    log.debug("getting", prUrl);
     return this.execute<PrRecord>(
-      `SELECT message_channel, message_timestamp FROM pr_messages WHERE pr_url = '${prUrl}'`,
+      `SELECT message_channel, message_timestamp, pr_url FROM pr_messages WHERE pr_url = '${prUrl}'`,
     );
   }
 
   deleteByPrUrl(prUrl: string) {
-    logger.debug("[storage] deleting", prUrl);
+    log.debug("deleting", prUrl);
     return this.execute(`DELETE FROM pr_messages WHERE pr_url = '${prUrl}'`);
   }
 
   deleteBeforeDays(numDays: number) {
-    logger.debug("[storage] deleting rows older than", numDays, "days");
+    log.debug("deleting rows older than", numDays, "days");
     const now = new Date();
     const dateString = getDateStringForDeletion(now, numDays);
     return this.execute(
@@ -90,17 +86,12 @@ export class PostgresStorage {
   }
 
   deleteAll() {
-    logger.debug("[storage] deleting all entries");
+    log.debug("deleting all entries");
     return this.execute("DELETE FROM pr_messages");
   }
 
   setGitHubUsername(userId: string, username: string) {
-    logger.debug(
-      "[storage] setting GitHub username",
-      username,
-      "for user",
-      userId,
-    );
+    log.debug("setting GitHub username", username, "for user", userId);
 
     return this.execute(
       `INSERT INTO users (slack_id, gh_username) VALUES ('${userId}', '${username}') ON CONFLICT (slack_id) DO UPDATE SET gh_username = EXCLUDED.gh_username;`,
@@ -108,21 +99,21 @@ export class PostgresStorage {
   }
 
   async getGitHubUsername(userId: string): Promise<string | null> {
-    logger.debug("[storage] getting GitHub username for user", userId);
+    log.debug("getting GitHub username for user", userId);
 
-    const [row] = await this.execute(
+    const [row] = (await this.execute(
       `SELECT gh_username FROM users WHERE slack_id = '${userId}'`,
-    ) as { ghUsername: string }[];
+    )) as { ghUsername: string }[];
 
     return row?.ghUsername || null;
   }
 
   async getSubscriptionsByUserId(userId: string): Promise<Set<Actions>> {
-    logger.debug("[storage] getting subscriptions for user", userId);
+    log.debug("getting subscriptions for user", userId);
 
-    const [row] = await this.execute(
+    const [row] = (await this.execute(
       `SELECT subscriptions FROM users WHERE slack_id = '${userId}'`,
-    ) as { subscriptions: string }[];
+    )) as { subscriptions: string }[];
 
     return new Set(
       (row?.subscriptions || "").split(/\s+|,+/g).filter(Boolean) as Actions[],
@@ -132,26 +123,19 @@ export class PostgresStorage {
   setSubscriptionsByUserId(userId: string, subscriptions: Set<Actions>) {
     const subscriptionsstr = Array.from(subscriptions).join(",");
 
-    logger.debug(
-      "[storage] setting subscriptions",
-      subscriptionsstr,
-      "for user",
-      userId,
-    );
+    log.debug("setting subscriptions", subscriptionsstr, "for user", userId);
 
     return this.execute(
       `INSERT INTO users (slack_id, subscriptions) VALUES ('${userId}', '${subscriptionsstr}') ON CONFLICT (slack_id) DO UPDATE SET subscriptions = EXCLUDED.subscriptions;`,
     );
   }
 
-  async getUserByGitHubUsername(
-    username: string,
-  ): Promise<User | null> {
-    logger.debug("[storage] getting subscriptions for GH user", username);
+  async getUserByGitHubUsername(username: string): Promise<User | null> {
+    log.debug("getting metadata for GH user", username);
 
-    const [row] = await this.execute(
+    const [row] = (await this.execute(
       `SELECT slack_id, subscriptions, inserted_at FROM users WHERE gh_username = '${username}'`,
-    ) as { slackId: string; subscriptions: string; insertedAt: string }[];
+    )) as { slackId: string; subscriptions: string; insertedAt: string }[];
 
     if (!row) {
       return null;
@@ -167,5 +151,13 @@ export class PostgresStorage {
       insertedAt: row.insertedAt,
       ghUsername: username,
     } as User;
+  }
+
+  async getAllPrs(): Promise<PrRecord[]> {
+    log.debug("getting all PR urls");
+
+    const rows = await this.execute<PrRecord>("SELECT * FROM pr_messages");
+
+    return rows;
   }
 }

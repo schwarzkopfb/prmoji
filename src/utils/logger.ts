@@ -1,4 +1,4 @@
-let _level: Levels | undefined;
+import { cyan, green, red, yellow } from "std/fmt/colors.ts";
 
 type MessagePart =
   | string
@@ -11,40 +11,68 @@ type MessagePart =
   | [];
 
 export enum Levels {
-  SILENT = "silent",
-  ERROR = "error",
-  INFO = "info",
-  DEBUG = "debug",
-  SILLY = "silly",
+  SILENT = 0,
+  ERROR = 1,
+  INFO = 2,
+  DEBUG = 3,
+  SILLY = 4,
 }
+
+export const levelNames = {
+  [Levels.SILENT]: "SILENT",
+  [Levels.ERROR]: "ERROR",
+  [Levels.INFO]: "INFO",
+  [Levels.DEBUG]: "DEBUG",
+  [Levels.SILLY]: "SILLY",
+};
+
+let currentLevel = Levels.INFO;
 
 export function setLevel(level: Levels): void {
-  _level = level;
-}
-
-function consoleLog(level: Levels, message: string): void {
-  if (level === Levels.ERROR) {
-    console.error(message);
-  } else {
-    console.log(message);
-  }
-}
-
-export function log(level: Levels, ...messageParts: MessagePart[]): void {
-  const message = messageParts.join(" ");
-  if (_level && level <= _level) {
-    consoleLog(level, message);
-  }
+  currentLevel = level;
+  info("Logging level set to", levelNames[level]);
 }
 
 function createLoggerFn(
   level: Levels,
+  label = "",
 ): (...messageParts: MessagePart[]) => void {
-  return (...messageParts) =>
-    log(level, `(${level})`, ...(messageParts.map((p) => JSON.stringify(p))));
+  const log = level === Levels.ERROR ? console.error : console.log;
+  let prefix = levelNames[level] + "\t";
+
+  switch (level) {
+    case Levels.ERROR:
+      prefix = red(prefix);
+      break;
+
+    case Levels.INFO:
+      prefix = green(prefix);
+      break;
+
+    case Levels.DEBUG:
+      prefix = yellow(prefix);
+      break;
+  }
+
+  if (label) {
+    prefix += cyan(label) + "\t";
+  }
+
+  return (...messageParts) => {
+    if (level <= currentLevel) {
+      log(prefix + messageParts.join(" "));
+    }
+  };
 }
 
 export const error = createLoggerFn(Levels.ERROR);
 export const info = createLoggerFn(Levels.INFO);
 export const debug = createLoggerFn(Levels.DEBUG);
 export const silly = createLoggerFn(Levels.SILLY);
+
+export const createLabeledLogger = (label: string) => ({
+  error: createLoggerFn(Levels.ERROR, label),
+  info: createLoggerFn(Levels.INFO, label),
+  debug: createLoggerFn(Levels.DEBUG, label),
+  silly: createLoggerFn(Levels.SILLY, label),
+});
