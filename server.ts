@@ -118,6 +118,12 @@ async function handleCleanupRequest({ response }: Context) {
 async function handleValidatePrsRequest(ctx: Context) {
   apiLog.info("received check release checklists request");
 
+  apiLog.info(
+    "checking API key",
+    INTERNAL_REST_API_KEY,
+    ctx.request.headers.get("x-api-key"),
+  );
+
   ctx.assert(
     INTERNAL_REST_API_KEY === ctx.request.headers.get("x-api-key"),
     401,
