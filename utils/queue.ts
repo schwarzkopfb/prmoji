@@ -48,7 +48,7 @@ async function handlePrValidation({ prUrl }: Message) {
     } else {
       await sendMessage(
         `:warning: release checklist is not complete for <${prUrl}|your PR>, ` +
-          "please review it and make sure all post-release steps are performed :pray:",
+          "please revisit it and make sure all post-release steps are performed :pray:",
         slackId,
       );
 
