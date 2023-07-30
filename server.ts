@@ -18,6 +18,7 @@ const PORT = parseInt(Deno.env.get("PORT") || "5000", 10);
 const SLACK_TOKEN = Deno.env.get("SLACK_TOKEN");
 const CONNECTION_STRING = Deno.env.get("DATABASE_URL");
 const NOTIFICATIONS_CHANNEL_ID = Deno.env.get("NOTIFICATIONS_CHANNEL_ID");
+const INTERNAL_REST_API_KEY = Deno.env.get("INTERNAL_REST_API_KEY");
 
 const startLog = logger.createLabeledLogger("start");
 const apiLog = logger.createLabeledLogger("rest");
@@ -114,8 +115,13 @@ async function handleCleanupRequest({ response }: Context) {
   response.body = "OK";
 }
 
-async function handleValidatePrsRequest({ response }: Context) {
+async function handleValidatePrsRequest(ctx: Context) {
   apiLog.info("received check release checklists request");
+
+  ctx.assert(
+    INTERNAL_REST_API_KEY === ctx.request.headers.get("x-api-key"),
+    401,
+  );
   await app.validatePrs();
-  response.body = "OK";
+  ctx.response.body = "OK";
 }
