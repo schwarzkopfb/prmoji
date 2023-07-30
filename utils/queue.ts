@@ -1,5 +1,5 @@
 import { createLabeledLogger } from "./logger.ts";
-import { PR_VALIDATION_DELAY } from "../const.ts";
+import { PR_VALIDATION_NOTIFICATION_DELAY } from "../const.ts";
 import { PrValidationResultStatus, validatePr } from "./validate_pr.ts";
 import { storage } from "../storage.ts";
 import { sendMessage } from "../slack.ts";
@@ -35,10 +35,12 @@ function messageListener(message: Message) {
 
 async function handlePrValidation({ prUrl }: Message) {
   info(`validating PR ${prUrl}`);
+
   const { status, user } = await validatePr(prUrl);
 
   if (PrValidationResultStatus.Incomplete === status && user) {
     info(`PR ${prUrl} is incomplete, trying to notify ${user}`);
+
     const { slackId } = await storage.getUserByGitHubUsername(user) ?? {};
 
     if (!slackId) {
@@ -46,9 +48,10 @@ async function handlePrValidation({ prUrl }: Message) {
     } else {
       await sendMessage(
         `:warning: release checklist is not complete for <${prUrl}|your PR>, ` +
-          "please review it and make sure all neccessary items are checked",
+          "please review it and make sure all post-release steps are performed :pray:",
         slackId,
       );
+
       debug(`notified ${user} about incomplete PR ${prUrl}`);
     }
   }
@@ -56,11 +59,12 @@ async function handlePrValidation({ prUrl }: Message) {
 
 export async function enqueuePrValidation(
   prUrl: string,
-  delay = PR_VALIDATION_DELAY,
+  delay = PR_VALIDATION_NOTIFICATION_DELAY,
 ) {
   await kv.enqueue(
     { action: Actions.PrValidation, prUrl },
     { delay },
   );
+
   debug(`enqueued PR validation for ${prUrl} after ${delay}ms`);
 }
