@@ -29,9 +29,8 @@ router
   .post("/event/github", handleGithubEvent)
   .post("/event/slack", handleSlackEvent)
   .post("/event/slack/command", handleSlackCommand)
-  .post("/cleanup/", handleCleanupRequest)
-  .get("/validate-prs", handleValidatePrsRequest)
-  .get("/test", handleTestRequest); // TODO: remove
+  .post("/cleanup", handleCleanupRequest)
+  .get("/validate-prs", handleValidatePrsRequest);
 
 server.addEventListener("listen", ({ hostname, port, secure }) => {
   startLog.info(
