@@ -1,8 +1,12 @@
+export const APP_NAME = Deno.env.get("APP_NAME") || "prmoji";
+export const APP_DISPLAY_NAME = Deno.env.get("APP_DISPLAY_NAME") || "Prmoji";
+export const GITHUB_ACCESS_TOKEN = Deno.env.get("GITHUB_ACCESS_TOKEN");
+
 export const RX_PR_URL =
   /https:\/\/github.com\/([\w-]+)\/([\w-]+)\/pull\/(\d+)/;
 
 export const RELEASE_CHECKLIST_HEADING = "## Release checklist";
-export const PR_VALIDATION_NOTIFICATION_DELAY = 2 * 60 * 60 * 1000;
+export const PR_VALIDATION_USER_NOTIFICATION_DELAY = 1 * 60 * 1000;
 
 export enum Actions {
   CREATED = "created",
@@ -31,18 +35,21 @@ export const MessageEmojiMap = new Map([
   [/New deal won!/, "rocket_colossyan"],
 ]);
 
-export const IGNORED_COMMENTERS = ["sonarcloud"];
+export const IGNORED_COMMENTERS = ["sonarcloud", "github-actions"];
 
-// repositories to watch for notifications
-// empty array means watching all repositories
-export const WATCHED_REPOSITORIES: string[] = [];
-// labels to watch for notifications
-// empty array means watching all labels
-export const WATCHED_LABELS: string[] = [];
+export const MERGE_NOTIFICATION_MESSAGE = "Merged: <%s|%s #%s $s> (by %s)";
 
-export const APP_NAME = Deno.env.get("APP_NAME") || "prmoji";
-export const APP_DISPLAY_NAME = Deno.env.get("APP_DISPLAY_NAME") || "Prmoji";
-export const GITHUB_ACCESS_TOKEN = Deno.env.get("GITHUB_ACCESS_TOKEN");
+export const PR_ACTION_USER_NOTIFICATION_MESSAGES = {
+  [Actions.CREATED]: "%s created <%s| PR> :heavy_plus_sign:",
+  [Actions.COMMENTED]: "%s commented on <your %s|PR> :speech_balloon:",
+  [Actions.APPROVED]: "%s approved <your %s|PR> :white_check_mark:",
+  [Actions.CHANGES_REQUESTED]:
+    "%s requested changes on <your %s|PR> :no_entry:",
+  [Actions.SUBMITTED]: "%s submitted <your %s|PR> :rocket:",
+  [Actions.MERGED]: "%s merged <your %s|PR> :merged:",
+  [Actions.CLOSED]: "%s closed <your %s|PR> :wastebasket:",
+  DEFAULT: "%s did something to <your %s|PR> :question:",
+};
 
 export const UNKNOWN_USER_MESSAGE =
   `I don't know you :crycat:. Type \`/${APP_NAME} ghuser <username>\` to set your GitHub username.`;

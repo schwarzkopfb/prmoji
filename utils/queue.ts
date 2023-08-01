@@ -1,5 +1,5 @@
 import { createLabeledLogger } from "./logger.ts";
-import { PR_VALIDATION_NOTIFICATION_DELAY } from "../const.ts";
+import { PR_VALIDATION_USER_NOTIFICATION_DELAY } from "../const.ts";
 import { PrValidationResultStatus, validatePr } from "./validate_pr.ts";
 import { storage } from "../storage.ts";
 import { sendMessage } from "../slack.ts";
@@ -59,7 +59,7 @@ async function handlePrValidation({ prUrl }: Message) {
 
 export async function enqueuePrValidation(
   prUrl: string,
-  delay = PR_VALIDATION_NOTIFICATION_DELAY,
+  delay = PR_VALIDATION_USER_NOTIFICATION_DELAY,
 ) {
   await kv.enqueue(
     { action: Actions.PrValidation, prUrl },

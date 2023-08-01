@@ -7,11 +7,10 @@ import { addEmoji, sendMessage } from "./slack.ts";
 import { storage } from "./storage.ts";
 import {
   formatEventList,
-  getDirectNotificationMessage,
-  getMessage,
+  getMergeNotificationMessage,
+  getPrActionUserNotificationMessage,
   getPrUrlsFromString,
   shouldAddEmoji,
-  shouldNotify,
 } from "./utils/helpers.ts";
 import { PrValidationResultStatus, validatePr } from "./utils/validate_pr.ts";
 import {
@@ -123,20 +122,16 @@ export class PrmojiApp {
       }
 
       // send merge notification to the configured channel
-      if (this.notificationsChannelId && shouldNotify(event)) {
-        info("event meets notification criteria, sending message");
+      if (event.action === Actions.MERGED && this.notificationsChannelId) {
+        info("sending merge message to the configured channel");
         try {
           await sendMessage(
-            getMessage(event),
+            getMergeNotificationMessage(event),
             this.notificationsChannelId,
           );
-        } catch (e) {
-          error("error sending message:", e);
+        } catch ({ message }) {
+          error("error sending message:", message);
         }
-      } else {
-        info(
-          "event does not meet notification criteria, not sending message",
-        );
       }
 
       // send direct activity notification to subscribed user
@@ -146,14 +141,14 @@ export class PrmojiApp {
         if (user?.subscriptions.has(event.action)) {
           info("user has subscribed to this event, sending message");
           await sendMessage(
-            getDirectNotificationMessage(event),
+            getPrActionUserNotificationMessage(event),
             user.slackId,
           );
         }
       }
 
       if (event.action === Actions.CLOSED) {
-        debug("deleting", event.url);
+        info("deleting", event.url);
         await storage.deleteByPrUrl(event.url);
       }
     }

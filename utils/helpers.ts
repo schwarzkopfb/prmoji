@@ -1,3 +1,4 @@
+import { sprintf } from "std/fmt/printf.ts";
 import GithubEvent from "../models/github_event.ts";
 import GithubRequest from "../models/github_request.ts";
 import GithubRequestBody from "../models/github_request_body.ts";
@@ -5,6 +6,8 @@ import { Levels, silly as log } from "./logger.ts";
 import {
   Actions,
   IGNORED_COMMENTERS,
+  MERGE_NOTIFICATION_MESSAGE,
+  PR_ACTION_USER_NOTIFICATION_MESSAGES,
   WATCHED_LABELS,
   WATCHED_REPOSITORIES,
 } from "../const.ts";
@@ -141,44 +144,14 @@ export function shouldAddEmoji(event: GithubEvent) {
   return !isIgnoredComment;
 }
 
-export function shouldNotify(event: GithubEvent) {
-  log("shouldNotify examining event:", JSON.stringify(event, null, 2));
-
-  const isMerged = event.action === Actions.MERGED;
-  const isWatchedRepository = WATCHED_REPOSITORIES.length === 0 ||
-    (event.fullName && WATCHED_REPOSITORIES.includes(event.fullName));
-  const hasWatchedLabel = WATCHED_LABELS.length === 0 ||
-    event.labels.some((label) => WATCHED_LABELS.includes(label));
-
-  const shouldNotify = isMerged && isWatchedRepository && hasWatchedLabel;
-  log(
-    "Notification criteria:",
-    JSON.stringify(
-      { isMerged, isWatchedRepository, hasWatchedLabel, shouldNotify },
-      null,
-      2,
-    ),
-  );
-
-  return shouldNotify;
-}
-
 export function getDateStringForDeletion(date: Date, numDays: number) {
   date.setDate(date.getDate() - numDays);
-  return date.toISOString().substr(0, 10);
+  return date.toISOString().substring(0, 10);
 }
 
-export function getMessage(event: GithubEvent) {
-  const repoName = event.name || "(missing repo name)";
-  const prUrl = event.url || "(missing PR URL)";
-  const prNumber = event.number || "(missing PR number)";
-  const prTitleMaxLength = 100;
-  const truncatedTitle = event.title && event.title.length > prTitleMaxLength
-    ? event.title.substr(0, prTitleMaxLength) + "..."
-    : event.title;
-  const authorName = event.author || "(missing PR author)";
-
-  return `Merged: <${prUrl}|${repoName} #${prNumber} ${truncatedTitle}> (by ${authorName})`;
+function truncate(s?: string, maxLength = 100) {
+  if (!s) return "";
+  return s.length > maxLength ? s.substring(0, maxLength) + "..." : s;
 }
 
 export function formatEventList(events: Set<Actions>) {
@@ -187,36 +160,33 @@ export function formatEventList(events: Set<Actions>) {
     .join(", ");
 }
 
-export function getDirectNotificationMessage(event: GithubEvent) {
+export function getMergeNotificationMessage(event: GithubEvent) {
+  const { title } = event;
+  const url = event.url || "(missing PR URL)";
+  const repo = event.name || "(missing repo name)";
+  const author = event.author || "(missing PR author)";
+  const prNumber = event.number || "(missing PR number)";
+  const shortTitle = truncate(title) || "(missing PR title)";
+
+  return sprintf(
+    MERGE_NOTIFICATION_MESSAGE,
+    url,
+    repo,
+    prNumber,
+    shortTitle,
+    author,
+  );
+}
+
+export function getPrActionUserNotificationMessage(event: GithubEvent) {
+  const { action } = event;
   const sender = event.sender || "(missing sender)";
   const prUrl = event.url || "(missing PR URL)";
-  const action = event.action || "(missing action)";
+  const message = action
+    ? PR_ACTION_USER_NOTIFICATION_MESSAGES[action]
+    : PR_ACTION_USER_NOTIFICATION_MESSAGES.DEFAULT;
 
-  switch (action) {
-    case Actions.CREATED:
-      return `${sender} created <${prUrl}| PR> :heavy_plus_sign:`;
-
-    case Actions.COMMENTED:
-      return `${sender} commented on your <${prUrl}|PR> :speech_balloon:`;
-
-    case Actions.APPROVED:
-      return `${sender} approved your <${prUrl}|PR> :white_check_mark:`;
-
-    case Actions.CHANGES_REQUESTED:
-      return `${sender} requested changes on your <${prUrl}|PR> :no_entry:`;
-
-    case Actions.SUBMITTED:
-      return `${sender} submitted your <${prUrl}|PR> :rocket:`;
-
-    case Actions.MERGED:
-      return `${sender} merged your <${prUrl}|PR> :merged:`;
-
-    case Actions.CLOSED:
-      return `${sender} closed your <${prUrl}|PR> :wastebasket:`;
-
-    default:
-      return `${sender} did something to your <${prUrl}|PR> :question:`;
-  }
+  return sprintf(message, sender, prUrl);
 }
 
 export function getLogLevelFromArgs(argv: string[]) {
