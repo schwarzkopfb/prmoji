@@ -8,8 +8,6 @@ import {
   IGNORED_COMMENTERS,
   MERGE_NOTIFICATION_MESSAGE,
   PR_ACTION_USER_NOTIFICATION_MESSAGES,
-  WATCHED_LABELS,
-  WATCHED_REPOSITORIES,
 } from "../const.ts";
 
 export function getPrUrl(requestBody: GithubRequestBody) {
