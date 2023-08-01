@@ -3,7 +3,6 @@ import { Client } from "postgres";
 import { createLabeledLogger } from "./utils/logger.ts";
 import PrRecord from "./models/pr_record.ts";
 import User from "./models/user.ts";
-import { getDateStringForDeletion } from "./utils/helpers.ts";
 import { Actions } from "./const.ts";
 
 const CONNECTION_STRING = Deno.env.get("DATABASE_URL");
@@ -79,21 +78,6 @@ export class PostgresStorage {
   deleteByPrUrl(prUrl: string) {
     debug("deleting", prUrl);
     return this.execute(`DELETE FROM pr_messages WHERE pr_url = '${prUrl}'`);
-  }
-
-  deleteBeforeDays(numDays: number) {
-    debug("deleting rows older than", numDays, "days");
-    const now = new Date();
-    const dateString = getDateStringForDeletion(now, numDays);
-    return this.execute(
-      `DELETE FROM pr_messages WHERE inserted_at < '${dateString}'::date`,
-    );
-  }
-
-  deleteAll() {
-    debug("deleting all entries");
-
-    return this.execute("DELETE FROM pr_messages");
   }
 
   setGitHubUsername(userId: string, username: string) {

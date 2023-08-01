@@ -1,4 +1,3 @@
-import { sprintf } from "std/fmt/printf.ts";
 import { createLabeledLogger } from "./utils/logger.ts";
 import GithubEvent from "./models/github_event.ts";
 import SlackMessage from "./models/slack_message.ts";
@@ -19,7 +18,6 @@ import {
   APP_NAME,
   HELP_MESSAGE,
   NOTIFICATIONS_CHANNEL_ID,
-  PR_VALIDATION_USER_NOTIFICATION_MESSAGE,
   UNKNOWN_COMMAND_MESSAGE,
   UNKNOWN_USER_MESSAGE,
 } from "./const.ts";
@@ -27,7 +25,6 @@ import { SlackSubcommands } from "./models/slack_subcommand.ts";
 import SlackSubscribeSubcommand from "./models/slack_subscribe_subcommand.ts";
 import SlackUnsubscribeSubcommand from "./models/slack_unsubscribe_subcommand.ts";
 import SlackGitHubUsernameSubcommand from "./models/slack_github_username_subcommand.ts";
-import SlackCleanupSubcommand from "./models/slack_cleanup_subcommand.ts";
 
 const { info, debug, error } = createLabeledLogger("app");
 
@@ -139,9 +136,7 @@ export class PrmojiApp {
 
         info("enqueuing PR validation");
         await enqueuePrValidation(event.url);
-      }
-
-      if (event.action === Actions.CLOSED) {
+      } else if (event.action === Actions.CLOSED) {
         info("deleting", event.url);
         await storage.deleteByPrUrl(event.url);
       }
@@ -243,17 +238,9 @@ export class PrmojiApp {
           }`;
       }
 
-      case SlackSubcommands.CLEANUP: {
-        const { days } = command.subcommand as SlackCleanupSubcommand;
-
-        if (days) {
-          await this.cleanupOld(days);
-        } else {
-          await this.cleanup();
-        }
-
+      case SlackSubcommands.CLEANUP:
+        await this.cleanup();
         return "Cleanup complete. :white_check_mark:";
-      }
 
       case SlackSubcommands.HELP:
         return HELP_MESSAGE;
@@ -263,42 +250,23 @@ export class PrmojiApp {
     }
   }
 
-  cleanupOld(days = 7) {
-    info("cleaning up entries as old as", days, "days or older");
-    return storage.deleteBeforeDays(days);
-  }
-
-  cleanup() {
+  async cleanup() {
     info("cleaning up all entries");
-    return storage.deleteAll();
-  }
-
-  introToUser(userId: string) {
-    return sendMessage(HELP_MESSAGE, userId);
-  }
-
-  async validatePrs() {
-    debug("checking PR release checklists");
     const prs = await storage.getAllPrs();
 
     for (const { prUrl } of prs) {
-      debug("checking release checklist", prUrl);
-      const { status, user } = await validatePr(prUrl);
+      const { status } = await validatePr(prUrl);
 
       if (status === PrValidationResultStatus.Complete) {
         info("deleting", prUrl);
         await storage.deleteByPrUrl(prUrl);
-      } else if (status === PrValidationResultStatus.Incomplete && user) {
-        info("sending message about incomplete PR", prUrl);
-        const userMetaData = await storage.getUserByGitHubUsername(user);
-
-        if (userMetaData?.slackId) {
-          await sendMessage(
-            sprintf(PR_VALIDATION_USER_NOTIFICATION_MESSAGE, prUrl),
-            userMetaData.slackId,
-          );
-        }
+      } else {
+        debug("skipping incomplete PR", prUrl);
       }
     }
+  }
+
+  introToUser(userId: string) {
+    return sendMessage(HELP_MESSAGE, userId);
   }
 }

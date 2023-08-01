@@ -9,7 +9,6 @@ import {
 import SlackGitHubUsernameSubcommand from "../models/slack_github_username_subcommand.ts";
 import SlackSubscribeSubcommand from "../models/slack_subscribe_subcommand.ts";
 import SlackUnsubscribeSubcommand from "../models/slack_unsubscribe_subcommand.ts";
-import SlackCleanupSubcommand from "../models/slack_cleanup_subcommand.ts";
 import GithubEvent from "../models/github_event.ts";
 import GithubRequest from "../models/github_request.ts";
 import {
@@ -25,7 +24,9 @@ import {
   getPrTitle,
   getPrUrl,
 } from "./helpers.ts";
-import * as logger from "../utils/logger.ts";
+import { createLabeledLogger } from "../utils/logger.ts";
+
+const { error } = createLabeledLogger("parser");
 
 export function parseGithubRequest(event: GithubRequest): GithubEvent {
   const { body } = event;
@@ -140,18 +141,11 @@ export function parseSlackCommandText(text: string): SlackSubcommand | null {
     case SlackSubcommands.LIST_SUBSCRIPTIONS:
       return { kind: SlackSubcommands.LIST_SUBSCRIPTIONS, args };
 
-    case SlackSubcommands.CLEANUP: {
-      const days = arg ? parseInt(arg, 10) : undefined;
-
-      if (days !== undefined && isNaN(days)) {
-        return null;
-      }
-
+    case SlackSubcommands.CLEANUP:
       return {
         kind: SlackSubcommands.CLEANUP,
-        days,
-      } as SlackCleanupSubcommand;
-    }
+        args,
+      };
 
     case "":
     case "hello":
@@ -173,14 +167,14 @@ export function parseSlackCommand(
   const text = params.get("text") || "";
 
   if (!userId) {
-    logger.error("Missing user_id in Slack command");
+    error("missing user_id in Slack command");
     return null;
   }
 
   const subcommand = parseSlackCommandText(text);
 
   if (!subcommand) {
-    logger.error("Invalid subcommand in Slack command");
+    error("invalid subcommand in Slack command");
     return null;
   }
 

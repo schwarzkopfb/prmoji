@@ -1,6 +1,5 @@
 export const APP_NAME = Deno.env.get("APP_NAME") || "prmoji";
 export const APP_DISPLAY_NAME = Deno.env.get("APP_DISPLAY_NAME") || "Prmoji";
-export const INTERNAL_REST_API_KEY = Deno.env.get("INTERNAL_REST_API_KEY");
 export const GITHUB_ACCESS_TOKEN = Deno.env.get("GITHUB_ACCESS_TOKEN");
 export const NOTIFICATIONS_CHANNEL_ID = Deno.env.get(
   "NOTIFICATIONS_CHANNEL_ID",
@@ -85,8 +84,7 @@ Supported commands:
 \`/${APP_NAME} unsubscribe\` - disables all notifications about your PRs via DMs
 \`/${APP_NAME} unsubscribe <event>\` - disables notifications about your PRs via DMs for the specified event
 \`/${APP_NAME} subscriptions\` - shows your current PR event subscriptions
-\`/${APP_NAME} cleanup\` - deletes all stored PRs *from all users* :warning:
-\`/${APP_NAME} cleanup <days>\` - deletes stored PRs older than the specified number of days *from all users* :warning:
+\`/${APP_NAME} cleanup\` - deletes all merged PRs with no release checklist or with a completed one
 \`/${APP_NAME} help\` - shows this message
 
 If you want to know more, check out my GitHub repository: https://schwarzkopfb.codes/prmoji

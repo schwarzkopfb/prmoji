@@ -10,7 +10,7 @@ import {
   parseSlackEvent,
 } from "./utils/request_parsers.ts";
 import { getLogLevelFromArgs } from "./utils/helpers.ts";
-import { INTERNAL_REST_API_KEY, UNKNOWN_COMMAND_MESSAGE } from "./const.ts";
+import { UNKNOWN_COMMAND_MESSAGE } from "./const.ts";
 
 const PORT = parseInt(Deno.env.get("PORT") || "4002", 10);
 
@@ -29,8 +29,7 @@ router
   .post("/event/github", handleGithubEvent)
   .post("/event/slack", handleSlackEvent)
   .post("/event/slack/command", handleSlackCommand)
-  .post("/cleanup", handleCleanupRequest)
-  .get("/validate-prs", handleValidatePrsRequest);
+  .post("/cleanup", handleCleanupRequest);
 
 server.addEventListener("listen", ({ hostname, port, secure }) => {
   startLog.info(
@@ -94,15 +93,6 @@ async function handleSlackCommand({ request, response }: Context) {
 
 async function handleCleanupRequest({ response }: Context) {
   apiLog.info("received cleanup request");
-  await app.cleanupOld();
+  await app.cleanup();
   response.body = "OK";
-}
-
-async function handleValidatePrsRequest(ctx: Context) {
-  apiLog.info("received check release checklists request");
-  const key = ctx.request.headers.get("x-api-key");
-
-  ctx.assert(INTERNAL_REST_API_KEY === key, 401);
-  await app.validatePrs();
-  ctx.response.body = "OK";
 }
