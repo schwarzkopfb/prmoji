@@ -40,7 +40,10 @@ async function handlePrValidation({ prUrl }: Message) {
   info(`validating PR ${prUrl}`);
   const { status, user } = await validatePr(prUrl);
 
-  if (PrValidationResultStatus.Incomplete === status && user) {
+  if (status === PrValidationResultStatus.Complete) {
+    info("deleting", prUrl);
+    await storage.deleteByPrUrl(prUrl);
+  } else if (status === PrValidationResultStatus.Incomplete && user) {
     info(`PR ${prUrl} is incomplete, trying to notify ${user}`);
     const { slackId } = await storage.getUserByGitHubUsername(user) ?? {};
 
