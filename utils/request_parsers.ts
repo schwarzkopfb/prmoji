@@ -1,6 +1,6 @@
 import { Actions } from "../const.ts";
 import SlackMessage from "../models/slack_message.ts";
-import SlackRequest from "../models/slack_request.ts";
+import SlackEvent from "../models/slack_event.ts";
 import SlackCommand from "../models/slack_command.ts";
 import {
   SlackSubcommand,
@@ -45,9 +45,9 @@ export function parseGithubRequest(event: GithubRequest): GithubEvent {
   };
 }
 
-export function parseSlackRequest({
-  body: { event },
-}: SlackRequest): SlackMessage {
+export function parseSlackEvent({
+  event,
+}: SlackEvent): SlackMessage {
   return {
     id: event.client_msg_id,
     text: event.text,

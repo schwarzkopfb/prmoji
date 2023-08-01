@@ -1,20 +1,18 @@
 import { Application, Context, Router } from "oak";
 import { PrmojiApp } from "./app.ts";
 import * as logger from "./utils/logger.ts";
-import SlackRequest from "./models/slack_request.ts";
+import SlackEvent from "./models/slack_event.ts";
 import GithubRequest from "./models/github_request.ts";
 import GithubRequestBody from "./models/github_request_body.ts";
 import {
   parseGithubRequest,
   parseSlackCommand,
-  parseSlackRequest,
+  parseSlackEvent,
 } from "./utils/request_parsers.ts";
 import { getLogLevelFromArgs } from "./utils/helpers.ts";
-import { UNKNOWN_COMMAND_MESSAGE } from "./const.ts";
+import { INTERNAL_REST_API_KEY, UNKNOWN_COMMAND_MESSAGE } from "./const.ts";
 
-const PORT = parseInt(Deno.env.get("PORT") || "5000", 10);
-const NOTIFICATIONS_CHANNEL_ID = Deno.env.get("NOTIFICATIONS_CHANNEL_ID");
-const INTERNAL_REST_API_KEY = Deno.env.get("INTERNAL_REST_API_KEY");
+const PORT = parseInt(Deno.env.get("PORT") || "4002", 10);
 
 const startLog = logger.createLabeledLogger("start");
 const apiLog = logger.createLabeledLogger("rest");
@@ -24,7 +22,7 @@ logger.setLevel(LOG_LEVEL);
 
 const server = new Application();
 const router = new Router();
-const app = new PrmojiApp(NOTIFICATIONS_CHANNEL_ID);
+const app = new PrmojiApp();
 
 router
   .get("/", healthcheck)
@@ -78,7 +76,7 @@ async function handleSlackEvent({ request, response }: Context) {
     response.body = body.challenge;
   } else {
     response.body = "OK";
-    app.handleMessage(parseSlackRequest({ body } as SlackRequest));
+    app.handleMessage(parseSlackEvent(body as SlackEvent));
   }
 }
 
@@ -103,17 +101,9 @@ async function handleCleanupRequest({ response }: Context) {
 
 async function handleValidatePrsRequest(ctx: Context) {
   apiLog.info("received check release checklists request");
+  const key = ctx.request.headers.get("x-api-key");
 
-  apiLog.info(
-    "checking API key",
-    INTERNAL_REST_API_KEY,
-    ctx.request.headers.get("x-api-key"),
-  );
-
-  ctx.assert(
-    INTERNAL_REST_API_KEY === ctx.request.headers.get("x-api-key"),
-    401,
-  );
+  ctx.assert(INTERNAL_REST_API_KEY === key, 401);
   await app.validatePrs();
   ctx.response.body = "OK";
 }

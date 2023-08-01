@@ -1,12 +1,19 @@
 export const APP_NAME = Deno.env.get("APP_NAME") || "prmoji";
 export const APP_DISPLAY_NAME = Deno.env.get("APP_DISPLAY_NAME") || "Prmoji";
+export const INTERNAL_REST_API_KEY = Deno.env.get("INTERNAL_REST_API_KEY");
 export const GITHUB_ACCESS_TOKEN = Deno.env.get("GITHUB_ACCESS_TOKEN");
+export const NOTIFICATIONS_CHANNEL_ID = Deno.env.get(
+  "NOTIFICATIONS_CHANNEL_ID",
+);
 
 export const RX_PR_URL =
   /https:\/\/github.com\/([\w-]+)\/([\w-]+)\/pull\/(\d+)/;
 
 export const RELEASE_CHECKLIST_HEADING = "## Release checklist";
 export const PR_VALIDATION_USER_NOTIFICATION_DELAY = 1 * 60 * 1000;
+export const PR_VALIDATION_USER_NOTIFICATION_MESSAGE =
+  ":warning: release checklist is not complete for <%s|your PR>, " +
+  "please revisit it and make sure all post-release steps are performed :pray:";
 
 export enum Actions {
   CREATED = "created",

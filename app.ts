@@ -1,3 +1,4 @@
+import { sprintf } from "std/fmt/printf.ts";
 import { createLabeledLogger } from "./utils/logger.ts";
 import GithubEvent from "./models/github_event.ts";
 import SlackMessage from "./models/slack_message.ts";
@@ -13,9 +14,12 @@ import {
   shouldAddEmoji,
 } from "./utils/helpers.ts";
 import { PrValidationResultStatus, validatePr } from "./utils/validate_pr.ts";
+import { enqueuePrValidation } from "./utils/queue.ts";
 import {
   APP_NAME,
   HELP_MESSAGE,
+  NOTIFICATIONS_CHANNEL_ID,
+  PR_VALIDATION_USER_NOTIFICATION_MESSAGE,
   UNKNOWN_COMMAND_MESSAGE,
   UNKNOWN_USER_MESSAGE,
 } from "./const.ts";
@@ -28,19 +32,10 @@ import SlackCleanupSubcommand from "./models/slack_cleanup_subcommand.ts";
 const { info, debug, error } = createLabeledLogger("app");
 
 export class PrmojiApp {
-  notificationsChannelId: string | null;
-
-  constructor(
-    notificationsChannelId: string | null = null,
-  ) {
-    debug("initializing PrmojiApp instance");
-    this.notificationsChannelId = notificationsChannelId;
-  }
-
   async handleMessage(message: SlackMessage) {
     info(
       "received Slack message",
-      message.text ? message.text.substr(0, 8) : "(no message text)",
+      message.text ? message.text.substring(0, 8) : "(no message text)",
     );
     if (!message.text || !message.channel || !message.timestamp) {
       debug("missing field(s), discarding message");
@@ -48,10 +43,7 @@ export class PrmojiApp {
     }
 
     const prUrlsInMessage = getPrUrlsFromString(message.text);
-    debug(
-      "PR URLs in message:",
-      prUrlsInMessage.length > 0 ? prUrlsInMessage : "none",
-    );
+    debug("PR URLs in message:", prUrlsInMessage);
 
     for (const prUrl of prUrlsInMessage) {
       debug("storing", prUrl);
@@ -67,8 +59,8 @@ export class PrmojiApp {
             message.channel,
             message.timestamp,
           );
-        } catch (e) {
-          error(`error adding emoji (${emoji}):`, e);
+        } catch ({ message }) {
+          error(`error adding emoji (${emoji}):`, message);
         }
       }
     }
@@ -90,9 +82,7 @@ export class PrmojiApp {
       return;
     }
 
-    debug(
-      `got ${result.length} matching item ${result.length === 1 ? "" : "s"}`,
-    );
+    debug(`got ${result.length} matching item(s)`);
 
     if (result.length > 0) {
       const emoji = PrActionEmojiMap[event.action];
@@ -105,7 +95,7 @@ export class PrmojiApp {
 
       if (shouldAddEmoji(event)) {
         for (const item of result) {
-          info("adding emoji", emoji);
+          info("adding emoji:", emoji);
 
           try {
             await addEmoji(
@@ -113,25 +103,12 @@ export class PrmojiApp {
               item.messageChannel,
               item.messageTimestamp,
             );
-          } catch (e) {
-            error("error adding emoji:", e);
+          } catch ({ message }) {
+            error("error adding emoji:", message);
           }
         }
       } else {
         info("should not add emoji for this event");
-      }
-
-      // send merge notification to the configured channel
-      if (event.action === Actions.MERGED && this.notificationsChannelId) {
-        info("sending merge message to the configured channel");
-        try {
-          await sendMessage(
-            getMergeNotificationMessage(event),
-            this.notificationsChannelId,
-          );
-        } catch ({ message }) {
-          error("error sending message:", message);
-        }
       }
 
       // send direct activity notification to subscribed user
@@ -145,6 +122,23 @@ export class PrmojiApp {
             user.slackId,
           );
         }
+      }
+
+      if (event.action === Actions.MERGED) {
+        if (NOTIFICATIONS_CHANNEL_ID) {
+          info("sending merge message to the configured channel");
+          try {
+            await sendMessage(
+              getMergeNotificationMessage(event),
+              NOTIFICATIONS_CHANNEL_ID,
+            );
+          } catch ({ message }) {
+            error("error sending message:", message);
+          }
+        }
+
+        info("enqueuing PR validation");
+        await enqueuePrValidation(event.url);
       }
 
       if (event.action === Actions.CLOSED) {
@@ -241,7 +235,7 @@ export class PrmojiApp {
         );
 
         return subscriptions.size === 0
-          ? "You are not subscribed to any events."
+          ? "You are not subscribed to all events."
           : `You are subscribed to the following events: ${
             formatEventList(
               subscriptions,
@@ -300,7 +294,7 @@ export class PrmojiApp {
 
         if (userMetaData?.slackId) {
           await sendMessage(
-            `:warning: release checklist is not complete for <${prUrl}|your PR>, please review it and make sure all neccessary items are checked`,
+            sprintf(PR_VALIDATION_USER_NOTIFICATION_MESSAGE, prUrl),
             userMetaData.slackId,
           );
         }
