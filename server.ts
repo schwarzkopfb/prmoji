@@ -75,8 +75,8 @@ async function handleSlackEvent({ request, response }: Context) {
   if (body.challenge) {
     response.body = body.challenge;
   } else {
-    response.body = "OK";
     app.handleMessage(parseSlackEvent(body as SlackEvent));
+    response.body = "OK";
   }
 }
 
