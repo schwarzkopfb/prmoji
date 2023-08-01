@@ -29,9 +29,8 @@ router
   .post("/event/github", handleGithubEvent)
   .post("/event/slack", handleSlackEvent)
   .post("/event/slack/command", handleSlackCommand)
-  .post("/cleanup/", handleCleanupRequest)
-  .get("/validate-prs", handleValidatePrsRequest)
-  .get("/test", handleTestRequest); // TODO: remove
+  .post("/cleanup", handleCleanupRequest)
+  .get("/validate-prs", handleValidatePrsRequest);
 
 server.addEventListener("listen", ({ hostname, port, secure }) => {
   startLog.info(
@@ -106,11 +105,4 @@ async function handleValidatePrsRequest(ctx: Context) {
   ctx.assert(INTERNAL_REST_API_KEY === key, 401);
   await app.validatePrs();
   ctx.response.body = "OK";
-}
-
-import { enqueuePrValidation } from "./utils/queue.ts";
-async function handleTestRequest({ response }: Context) {
-  apiLog.info("received test request");
-  await enqueuePrValidation("https://github.com/colossyan/app/pull/1757");
-  response.body = "OK";
 }
