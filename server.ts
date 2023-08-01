@@ -107,10 +107,3 @@ async function handleValidatePrsRequest(ctx: Context) {
   await app.validatePrs();
   ctx.response.body = "OK";
 }
-
-import { enqueuePrValidation } from "./utils/queue.ts";
-async function handleTestRequest({ response }: Context) {
-  apiLog.info("received test request");
-  await enqueuePrValidation("https://github.com/colossyan/app/pull/1757");
-  response.body = "OK";
-}
