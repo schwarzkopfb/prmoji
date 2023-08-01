@@ -67,7 +67,7 @@ export class PrmojiApp {
   }
 
   async handlePrEvent(event: GithubEvent) {
-    info("received PR event:", event.number || "(no PR number)");
+    info("received PR event:", event.action, event.number);
 
     if (!event.url || !event.action) {
       debug("missing field(s), discarding PR event");
