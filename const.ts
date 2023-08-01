@@ -27,7 +27,7 @@ export const PrActionEmojiMap = {
 
   [Actions.CREATED]: null,
   [Actions.SUBMITTED]: null,
-};
+} as const;
 
 export const MessageEmojiMap = new Map([
   [/^A new customer has just signed up/, "rocket_colossyan"],
@@ -41,14 +41,14 @@ export const MERGE_NOTIFICATION_MESSAGE = "Merged: <%s|%s #%s $s> (by %s)";
 
 export const PR_ACTION_USER_NOTIFICATION_MESSAGES = {
   [Actions.CREATED]: "%s created <%s| PR> :heavy_plus_sign:",
-  [Actions.COMMENTED]: "%s commented on <your %s|PR> :speech_balloon:",
-  [Actions.APPROVED]: "%s approved <your %s|PR> :white_check_mark:",
+  [Actions.COMMENTED]: "%s commented on <%s|your PR> :speech_balloon:",
+  [Actions.APPROVED]: "%s approved <%s|your PR> :white_check_mark:",
   [Actions.CHANGES_REQUESTED]:
-    "%s requested changes on <your %s|PR> :no_entry:",
-  [Actions.SUBMITTED]: "%s submitted <your %s|PR> :rocket:",
-  [Actions.MERGED]: "%s merged <your %s|PR> :merged:",
-  [Actions.CLOSED]: "%s closed <your %s|PR> :wastebasket:",
-  DEFAULT: "%s did something to <your %s|PR> :question:",
+    "%s requested changes on <%s|your PR> :no_entry:",
+  [Actions.SUBMITTED]: "%s submitted <%s|your PR> :rocket:",
+  [Actions.MERGED]: "%s merged <%s|your PR> :merged:",
+  [Actions.CLOSED]: "%s closed <%s|your PR> :wastebasket:",
+  DEFAULT: "%s did something to <%s|your PR> :question:",
 };
 
 export const UNKNOWN_USER_MESSAGE =
