@@ -8,7 +8,7 @@ import {
   IGNORED_COMMENTERS,
   MERGE_NOTIFICATION_MESSAGE,
   PR_ACTION_USER_NOTIFICATION_MESSAGES,
-  RX_PR_URL,
+  RX_PR_URL_MULTI,
 } from "../const.ts";
 
 export function getPrUrl(requestBody: GithubRequestBody) {
@@ -117,7 +117,7 @@ export const actionConditions: ActionConditions = {
 };
 
 export function getPrUrlsFromString(text: string) {
-  return text.match(RX_PR_URL) ?? [];
+  return text.match(RX_PR_URL_MULTI) ?? [];
 }
 
 export function shouldAddEmoji(event: GithubEvent) {
