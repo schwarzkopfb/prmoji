@@ -128,8 +128,9 @@ export class PrmojiApp {
               getMergeNotificationMessage(event),
               NOTIFICATIONS_CHANNEL_ID,
             );
-          } catch ({ message }) {
-            error("error sending message:", message);
+          } catch (err) {
+            error("error sending message:", err.message);
+            console.error(err);
           }
         }
 
