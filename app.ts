@@ -134,7 +134,11 @@ export class PrmojiApp {
           }
         }
 
-        if (event.author && !event.labels.includes("auto-deploy")) {
+        if (
+          event.fullName === "colossyan/app" && // TODO: make this configurable
+          event.author &&
+          !event.labels.includes("auto-deploy")
+        ) {
           const user = await storage.getUserByGitHubUsername(event.author);
           info("no auto-deploy, try to remind the PR author", user?.ghUsername);
 
