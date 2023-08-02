@@ -2,7 +2,7 @@ import { sprintf } from "std/fmt/printf.ts";
 import GithubEvent from "../models/github_event.ts";
 import GithubRequest from "../models/github_request.ts";
 import GithubRequestBody from "../models/github_request_body.ts";
-import { info, Levels, silly as log } from "./logger.ts";
+import { Levels, silly as log } from "./logger.ts";
 import {
   Actions,
   IGNORED_COMMENTERS,
