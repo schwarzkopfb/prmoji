@@ -65,6 +65,11 @@ export async function validatePr(url: string): Promise<PrValidationResult> {
     return { status: PrValidationResultStatus.Irrelevant };
   }
 
+  if (!body) {
+    debug("PR merged with empty body, consider it complete");
+    return { status: PrValidationResultStatus.Complete };
+  }
+
   const lines = body.split("\n").map((line: string) => line.trim());
   let checklistFound = false;
 
