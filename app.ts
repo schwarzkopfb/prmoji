@@ -108,12 +108,11 @@ export class PrmojiApp {
         info("should not add emoji for this event");
       }
 
-      // send direct activity notification to subscribed user
       if (event.author !== undefined && event.sender !== event.author) {
         const user = await storage.getUserByGitHubUsername(event.author);
 
         if (user?.subscriptions.has(event.action)) {
-          info("user has subscribed to this event, sending message");
+          info("user has subscribed to this event, sending direct message");
           await sendMessage(
             getPrActionUserNotificationMessage(event),
             user.slackId,
