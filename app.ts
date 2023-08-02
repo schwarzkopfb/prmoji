@@ -150,7 +150,7 @@ export class PrmojiApp {
           }
         }
 
-        info("enqueuing PR validation");
+        info("enqueuing PR validation", event.url);
         await enqueuePrValidation(event.url);
       } else if (event.action === Actions.CLOSED) {
         info("deleting", event.url);
