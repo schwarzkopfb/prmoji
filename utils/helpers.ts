@@ -2,7 +2,7 @@ import { sprintf } from "std/fmt/printf.ts";
 import GithubEvent from "../models/github_event.ts";
 import GithubRequest from "../models/github_request.ts";
 import GithubRequestBody from "../models/github_request_body.ts";
-import { Levels, silly as log } from "./logger.ts";
+import { info, Levels, silly as log } from "./logger.ts";
 import {
   Actions,
   IGNORED_COMMENTERS,
@@ -139,12 +139,23 @@ export function formatEventList(events: Set<Actions>) {
 }
 
 export function getMergeNotificationMessage(event: GithubEvent) {
+  info("getMergeNotificationMessage called");
   const { title } = event;
   const url = event.url || "(missing PR URL)";
   const repo = event.name || "(missing repo name)";
   const author = event.author || "(missing PR author)";
   const prNumber = event.number || "(missing PR number)";
   const shortTitle = truncate(title) || "(missing PR title)";
+
+  info(
+    "sprintf",
+    MERGE_NOTIFICATION_MESSAGE,
+    url,
+    repo,
+    prNumber,
+    shortTitle,
+    author,
+  );
 
   return sprintf(
     MERGE_NOTIFICATION_MESSAGE,
