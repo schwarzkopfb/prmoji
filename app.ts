@@ -133,6 +133,22 @@ export class PrmojiApp {
           }
         }
 
+        if (event.author && !event.labels.includes("auto-deploy")) {
+          const user = await storage.getUserByGitHubUsername(event.author);
+          info("no auto-deploy, try to remind the PR author", user?.ghUsername);
+
+          if (user?.slackId) {
+            try {
+              await sendMessage(
+                `:scream: <${event.url}|your PR> was merged without \`auto-deploy\` label, ignore this message if it was intentional`,
+                user.slackId,
+              );
+            } catch ({ message }) {
+              error("error sending message:", message);
+            }
+          }
+        }
+
         info("enqueuing PR validation");
         await enqueuePrValidation(event.url);
       } else if (event.action === Actions.CLOSED) {
