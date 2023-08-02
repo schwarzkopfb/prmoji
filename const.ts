@@ -6,7 +6,7 @@ export const NOTIFICATIONS_CHANNEL_ID = Deno.env.get(
 );
 
 export const RX_PR_URL =
-  /https:\/\/github.com\/([\w-]+)\/([\w-]+)\/pull\/(\d+)/;
+  /https:\/\/github.com\/([\w-]+)\/([\w-]+)\/pull\/(\d+)/g;
 
 export const RELEASE_CHECKLIST_HEADING = "## Release checklist";
 export const PR_VALIDATION_USER_NOTIFICATION_DELAY = 30 * 60 * 1000;
