@@ -43,10 +43,10 @@ export const MessageEmojiMap = new Map([
 
 export const IGNORED_COMMENTERS = ["sonarcloud", "github-actions"];
 
-export const MERGE_NOTIFICATION_MESSAGE = "Merged: <%s|%s #%s %s> (by %s)";
+export const MERGE_NOTIFICATION_MESSAGE = "Merged: <%s|%s #%d %s> (by %s)";
 
 export const PR_ACTION_USER_NOTIFICATION_MESSAGES = {
-  [Actions.CREATED]: "%s created <%s| PR> :heavy_plus_sign:",
+  [Actions.CREATED]: "%s created <%s|PR> :heavy_plus_sign:",
   [Actions.COMMENTED]: "%s commented on <%s|your PR> :speech_balloon:",
   [Actions.APPROVED]: "%s approved <%s|your PR> :white_check_mark:",
   [Actions.CHANGES_REQUESTED]:
