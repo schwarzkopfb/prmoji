@@ -58,6 +58,12 @@ export async function validatePr(url: string): Promise<PrValidationResult> {
     `https://api.github.com/repos/${owner}/${repo}/pulls/${prNumber}`,
     reqInfo,
   );
+
+  if (!response.ok) {
+    debug("PR not found");
+    return { status: PrValidationResultStatus.Irrelevant };
+  }
+
   const { body, user, merged } = await response.json();
 
   if (!merged) {
