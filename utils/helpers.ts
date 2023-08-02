@@ -11,11 +11,10 @@ import {
 } from "../const.ts";
 
 export function getPrUrl(requestBody: GithubRequestBody) {
-  if (requestBody.pull_request) {
-    return requestBody.pull_request.html_url;
-  } else if (requestBody.issue && requestBody.issue.pull_request) {
-    return requestBody.issue.pull_request.html_url;
-  }
+  return (
+    requestBody.pull_request?.html_url ??
+      requestBody.issue?.pull_request?.html_url
+  );
 }
 
 export function getPrAction(event: GithubRequest) {
@@ -39,59 +38,45 @@ export function getPrAction(event: GithubRequest) {
 }
 
 export function getPrCommenter(requestBody: GithubRequestBody) {
-  return (
-    requestBody.comment &&
-    requestBody.comment.user &&
-    requestBody.comment.user.login
-  );
+  return requestBody.comment?.user?.login;
 }
 
 export function getPrCommentBody(requestBody: GithubRequestBody) {
-  return requestBody.comment && requestBody.comment.body;
+  return requestBody.comment?.body;
 }
 
 export function getPrRepoName(requestBody: GithubRequestBody) {
-  return requestBody.repository && requestBody.repository.name;
+  return requestBody.repository?.name;
 }
 
 export function getPrRepoFullName(requestBody: GithubRequestBody) {
-  return requestBody.repository && requestBody.repository.full_name;
+  return requestBody.repository?.full_name;
 }
 
 export function getPrNumber(requestBody: GithubRequestBody) {
   return (
-    (requestBody.pull_request && requestBody.pull_request.number) ||
-    (requestBody.issue && requestBody.issue.number)
+    requestBody.pull_request?.number ??
+      requestBody.issue?.number
   );
 }
 
 export function getPrAuthor(requestBody: GithubRequestBody) {
   return (
-    (requestBody.issue &&
-      requestBody.issue.user &&
-      requestBody.issue.user.login) ||
-    (requestBody.pull_request &&
-      requestBody.pull_request.user &&
-      requestBody.pull_request.user.login)
+    requestBody.issue?.user?.login ??
+      requestBody.pull_request?.user?.login
   );
 }
 
 export function getPrLabels(requestBody: GithubRequestBody) {
-  return (
-    (requestBody.pull_request && requestBody.pull_request.labels) ||
-    []
-  ).map((label) => label.name);
+  return (requestBody.pull_request?.labels ?? []).map((label) => label.name);
 }
 
 export function getPrTitle(requestBody: GithubRequestBody) {
-  return (
-    (requestBody.issue && requestBody.issue.title) ||
-    (requestBody.pull_request && requestBody.pull_request.title)
-  );
+  return requestBody.issue?.title ?? requestBody.pull_request?.title;
 }
 
 export function getPrSender(requestBody: GithubRequestBody) {
-  return requestBody.sender && requestBody.sender.login;
+  return requestBody.sender?.login;
 }
 
 type ActionConditions = {
@@ -140,11 +125,6 @@ export function shouldAddEmoji(event: GithubEvent) {
   const isIgnoredComment = event.action === Actions.COMMENTED &&
     IGNORED_COMMENTERS.includes(event.commenter);
   return !isIgnoredComment;
-}
-
-export function getDateStringForDeletion(date: Date, numDays: number) {
-  date.setDate(date.getDate() - numDays);
-  return date.toISOString().substring(0, 10);
 }
 
 function truncate(s?: string, maxLength = 100) {
