@@ -5,8 +5,9 @@ export const NOTIFICATIONS_CHANNEL_ID = Deno.env.get(
   "NOTIFICATIONS_CHANNEL_ID",
 );
 
-export const RX_PR_URL =
-  /https:\/\/github.com\/([\w-]+)\/([\w-]+)\/pull\/(\d+)/g;
+export const RX_PR_URL_PARTS =
+  /https:\/\/github.com\/([\w-]+)\/([\w-]+)\/pull\/(\d+)/;
+export const RX_PR_URL_MULTI = new RegExp(RX_PR_URL_PARTS.source, "g");
 
 export const RELEASE_CHECKLIST_HEADING = "## Release checklist";
 export const PR_VALIDATION_USER_NOTIFICATION_DELAY = 30 * 60 * 1000;

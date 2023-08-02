@@ -1,7 +1,7 @@
 import {
   GITHUB_ACCESS_TOKEN,
   RELEASE_CHECKLIST_HEADING,
-  RX_PR_URL,
+  RX_PR_URL_PARTS,
 } from "../const.ts";
 import { createLabeledLogger } from "./logger.ts";
 
@@ -46,7 +46,7 @@ export interface PrValidationResult {
  */
 export async function validatePr(url: string): Promise<PrValidationResult> {
   debug("validating PR", url);
-  const match = url.match(RX_PR_URL);
+  const match = url.match(RX_PR_URL_PARTS);
 
   if (!match) {
     debug("not a PR URL");
