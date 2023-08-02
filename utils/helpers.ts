@@ -138,23 +138,12 @@ export function formatEventList(events: Set<Actions>) {
 }
 
 export function getMergeNotificationMessage(event: GithubEvent) {
-  info("getMergeNotificationMessage called");
   const { title } = event;
   const url = event.url || "(missing PR URL)";
   const repo = event.name || "(missing repo name)";
   const author = event.author || "(missing PR author)";
   const prNumber = event.number || "(missing PR number)";
   const shortTitle = truncate(title) || "(missing PR title)";
-
-  info(
-    "sprintf",
-    MERGE_NOTIFICATION_MESSAGE,
-    url,
-    repo,
-    prNumber,
-    shortTitle,
-    author,
-  );
 
   return sprintf(
     MERGE_NOTIFICATION_MESSAGE,
