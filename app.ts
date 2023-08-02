@@ -255,7 +255,7 @@ export class PrmojiApp {
 
       case SlackSubcommands.CLEANUP:
         await this.cleanup();
-        return "Cleanup complete. :white_check_mark:";
+        return "Cleanup complete! :white_check_mark:";
 
       case SlackSubcommands.HELP:
         return HELP_MESSAGE;
