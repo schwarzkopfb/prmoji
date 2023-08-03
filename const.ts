@@ -42,7 +42,7 @@ export const MessageEmojiMap = new Map([
   [/New deal won!/, "rocket_colossyan"],
 ]);
 
-export const IGNORED_COMMENTERS = ["sonarcloud", "github-actions"];
+export const IGNORED_COMMENTERS = ["sonarcloud", "github-actions", "linear"];
 
 export const MERGE_NOTIFICATION_MESSAGE = "Merged: <%s|%s #%d %s> (by %s)";
 
