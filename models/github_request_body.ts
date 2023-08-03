@@ -23,6 +23,9 @@ export default interface GithubRequestBody {
     labels: {
       name: string;
     }[];
+    base?: {
+      ref: string;
+    };
   };
   comment: {
     body: string;

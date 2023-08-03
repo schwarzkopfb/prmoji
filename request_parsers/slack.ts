@@ -9,42 +9,10 @@ import {
 import SlackGitHubUsernameSubcommand from "../models/slack_github_username_subcommand.ts";
 import SlackSubscribeSubcommand from "../models/slack_subscribe_subcommand.ts";
 import SlackUnsubscribeSubcommand from "../models/slack_unsubscribe_subcommand.ts";
-import GithubEvent from "../models/github_event.ts";
-import GithubRequest from "../models/github_request.ts";
-import {
-  getPrAction,
-  getPrAuthor,
-  getPrCommentBody,
-  getPrCommenter,
-  getPrLabels,
-  getPrNumber,
-  getPrRepoFullName,
-  getPrRepoName,
-  getPrSender,
-  getPrTitle,
-  getPrUrl,
-} from "./helpers.ts";
+
 import { createLabeledLogger } from "../utils/logger.ts";
 
-const { error } = createLabeledLogger("parser");
-
-export function parseGithubRequest(event: GithubRequest): GithubEvent {
-  const { body } = event;
-
-  return {
-    url: getPrUrl(body),
-    action: getPrAction(event),
-    commenter: getPrCommenter(body),
-    comment: getPrCommentBody(body),
-    name: getPrRepoName(body),
-    fullName: getPrRepoFullName(body),
-    number: getPrNumber(body),
-    author: getPrAuthor(body),
-    labels: getPrLabels(body),
-    title: getPrTitle(body),
-    sender: getPrSender(body),
-  };
-}
+const { error } = createLabeledLogger("slack_parser");
 
 export function parseSlackEvent({
   event,

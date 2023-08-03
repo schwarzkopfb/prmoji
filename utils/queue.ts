@@ -6,7 +6,7 @@ import {
 } from "../const.ts";
 import { PrValidationResultStatus, validatePr } from "./validate_pr.ts";
 import { storage } from "../storage.ts";
-import { sendMessage } from "../slack.ts";
+import { sendMessage } from "./slack.ts";
 
 const { info, debug, error } = createLabeledLogger("queue");
 const kv = await Deno.openKv();
@@ -56,6 +56,13 @@ async function handlePrValidation({ prUrl }: Message) {
       );
       await enqueuePrValidation(prUrl);
       debug(`notif sent about incomplete PR ${prUrl}, re-enqueued validation`);
+
+      // TODO: remove this, it's just for testing
+      // send a message to schwarzkopfb
+      await sendMessage(
+        `notif sent about incomplete PR ${prUrl}, re-enqueued validation`,
+        "C04G5L4EM71",
+      );
     }
   }
 }

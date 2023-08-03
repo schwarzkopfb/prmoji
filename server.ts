@@ -4,11 +4,8 @@ import * as logger from "./utils/logger.ts";
 import SlackEvent from "./models/slack_event.ts";
 import GithubRequest from "./models/github_request.ts";
 import GithubRequestBody from "./models/github_request_body.ts";
-import {
-  parseGithubRequest,
-  parseSlackCommand,
-  parseSlackEvent,
-} from "./utils/request_parsers.ts";
+import { parseSlackCommand, parseSlackEvent } from "./request_parsers/slack.ts";
+import { parseGithubRequest } from "./request_parsers/github.ts";
 import { getLogLevelFromArgs } from "./utils/helpers.ts";
 import { UNKNOWN_COMMAND_MESSAGE } from "./const.ts";
 

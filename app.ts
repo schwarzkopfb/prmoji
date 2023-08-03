@@ -3,7 +3,7 @@ import GithubEvent from "./models/github_event.ts";
 import SlackMessage from "./models/slack_message.ts";
 import SlackCommand from "./models/slack_command.ts";
 import { Actions, MessageEmojiMap, PrActionEmojiMap } from "./const.ts";
-import { addEmoji, sendMessage } from "./slack.ts";
+import { addEmoji, sendMessage } from "./utils/slack.ts";
 import { storage } from "./storage.ts";
 import {
   formatEventList,
@@ -135,8 +135,9 @@ export class PrmojiApp {
         }
 
         if (
-          event.fullName === "colossyan/app" && // TODO: make this configurable
           event.author &&
+          event.baseRef === "main" &&
+          event.fullName === "colossyan/app" && // TODO: make this configurable
           !event.labels.includes("auto-deploy")
         ) {
           const user = await storage.getUserByGitHubUsername(event.author);

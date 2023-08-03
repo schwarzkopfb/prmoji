@@ -12,4 +12,5 @@ export default interface GithubEvent {
   labels: string[];
   title?: string;
   sender?: string;
+  baseRef?: string;
 }

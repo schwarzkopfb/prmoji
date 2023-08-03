@@ -1,5 +1,5 @@
 import { WebClient } from "@slack/web-api";
-import { createLabeledLogger } from "./utils/logger.ts";
+import { createLabeledLogger } from "./logger.ts";
 
 const SLACK_TOKEN = Deno.env.get("SLACK_TOKEN");
 const { debug } = createLabeledLogger("slack");
