@@ -10,7 +10,7 @@ export const RX_PR_URL_PARTS =
 export const RX_PR_URL_MULTI = new RegExp(RX_PR_URL_PARTS.source, "g");
 
 export const RELEASE_CHECKLIST_HEADING = "## Release checklist";
-export const PR_VALIDATION_USER_NOTIFICATION_DELAY = 30 * 60 * 1000;
+export const PR_VALIDATION_USER_NOTIFICATION_DELAY = 60 * 60 * 1000;
 export const PR_VALIDATION_USER_NOTIFICATION_MESSAGE =
   ":warning: release checklist is not complete for <%s|your PR>, " +
   "please revisit it and make sure all post-release steps are performed :pray:";
