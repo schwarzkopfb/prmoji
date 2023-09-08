@@ -3,6 +3,7 @@ import GithubEvent from "../models/github_event.ts";
 import { Levels } from "./logger.ts";
 import {
   Actions,
+  DEFAULT_TIMEZONE,
   IGNORED_COMMENTERS,
   MERGE_NOTIFICATION_MESSAGE,
   PR_ACTION_USER_NOTIFICATION_MESSAGES,
@@ -80,4 +81,18 @@ export function getLogLevelFromArgs(argv: string[]) {
     default:
       return Levels.INFO;
   }
+}
+
+/**
+ * Returns true if the current time is within working hours (10am-6pm Mon-Fri)
+ *
+ * @param timezone The timezone to use for the check.
+ * @returns true or false as described above.
+ */
+export function isWithinWorkingHours(timeZone: string = DEFAULT_TIMEZONE) {
+  const nowStr = new Date().toLocaleString("en-US", { timeZone });
+  const now = new Date(nowStr);
+  const dayOfWeek = now.getDay();
+  const hour = now.getHours();
+  return dayOfWeek >= 1 && dayOfWeek <= 5 && hour >= 10 && hour < 18;
 }

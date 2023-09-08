@@ -1,5 +1,8 @@
 export const APP_NAME = Deno.env.get("APP_NAME") || "prmoji";
 export const APP_DISPLAY_NAME = Deno.env.get("APP_DISPLAY_NAME") || "Prmoji";
+export const DEFAULT_TIMEZONE = Deno.env.get("DEFAULT_TIMEZONE") ||
+  "Europe/Budapest";
+
 export const GITHUB_ACCESS_TOKEN = Deno.env.get("GITHUB_ACCESS_TOKEN");
 export const NOTIFICATIONS_CHANNEL_ID = Deno.env.get(
   "NOTIFICATIONS_CHANNEL_ID",
@@ -88,5 +91,5 @@ Supported commands:
 \`/${APP_NAME} cleanup\` - deletes all merged PRs with no release checklist or with a completed one
 \`/${APP_NAME} help\` - shows this message
 
-If you want to know more, check out my GitHub repository: https://schwarzkopfb.codes/prmoji
+If you want to know more, check out my <https://schwarzkopfb.codes/prmoji|GitHub repository>
 `;

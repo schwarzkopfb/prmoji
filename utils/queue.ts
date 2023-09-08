@@ -7,6 +7,7 @@ import {
 import { PrValidationResultStatus, validatePr } from "./validate_pr.ts";
 import { storage } from "../storage.ts";
 import { sendMessage } from "./slack.ts";
+import { isWithinWorkingHours } from "./helpers.ts";
 
 const { info, debug, error } = createLabeledLogger("queue");
 const kv = await Deno.openKv();
@@ -50,19 +51,26 @@ async function handlePrValidation({ prUrl }: Message) {
     if (!slackId) {
       debug(`user ${user} has no Slack ID, skipping notification`);
     } else {
-      await sendMessage(
-        sprintf(PR_VALIDATION_USER_NOTIFICATION_MESSAGE, prUrl),
-        slackId,
-      );
-      await enqueuePrValidation(prUrl);
-      debug(`notif sent about incomplete PR ${prUrl}, re-enqueued validation`);
+      if (isWithinWorkingHours()) {
+        await sendMessage(
+          sprintf(PR_VALIDATION_USER_NOTIFICATION_MESSAGE, prUrl),
+          slackId,
+        );
 
-      // TODO: remove this, it's just for testing
-      // send a message to schwarzkopfb
-      await sendMessage(
-        `notif sent about incomplete PR ${prUrl}, re-enqueued validation`,
-        "C04G5L4EM71",
-      );
+        debug(
+          `notif sent about incomplete PR ${prUrl}, will re-enqueue validation`,
+        );
+
+        // TODO: remove this, it's just for manual testing
+        // send a message to schwarzkopfb
+        await sendMessage(
+          `notif sent about incomplete PR ${prUrl}, will re-enqueue validation`,
+          "C04G5L4EM71",
+        );
+      }
+
+      // we re-enqueue validation even if we didn't send a notification
+      await enqueuePrValidation(prUrl);
     }
   }
 }
