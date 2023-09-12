@@ -1,6 +1,4 @@
-import { PrmojiApp } from "../src/app.ts";
-import { SlackClient } from "../src/slack_client.ts";
-import { PostgresStorage } from "../src/storage.ts";
+import { PrmojiApp } from "../app.ts";
 
 const USER_ID = Deno.args[0];
 const SLACK_TOKEN = Deno.env.get("SLACK_TOKEN");
@@ -13,9 +11,7 @@ if (!CONNECTION_STRING) {
   throw new Error("DATABASE_URL environment variable is not set");
 }
 
-const storage = new PostgresStorage(CONNECTION_STRING);
-const slackClient = new SlackClient(SLACK_TOKEN);
-const app = new PrmojiApp(storage, slackClient);
+const app = new PrmojiApp();
 
 try {
   await app.introToUser(USER_ID);
