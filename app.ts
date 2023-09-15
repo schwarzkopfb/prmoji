@@ -251,7 +251,7 @@ export class PrmojiApp {
         );
 
         return subscriptions.size === 0
-          ? "You are not subscribed to all events."
+          ? "You are not subscribed to any events."
           : `You are subscribed to the following events: ${
             formatEventList(
               subscriptions,
